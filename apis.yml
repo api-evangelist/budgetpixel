@@ -1,0 +1,78 @@
+name: BudgetPixel
+description: >-
+  All-in-one AI image, video, music & sound-effect generator with a design studio / infinite canvas and a creator
+  community. Offers a credit-metered REST API, a hosted OAuth-based MCP server, and OpenAPI/llms.txt documentation
+  surfaces spanning 100+ AI models.
+url: >-
+  https://raw.githubusercontent.com/api-evangelist/ai-image-video-amp-music-generator-design-studio-amp-canvas-/refs/heads/main/apis.yml
+created: '2026-08-28'
+modified: '2026-08-28'
+specificationVersion: '0.21'
+tags:
+  - Generative AI
+  - AI Image Generation
+  - AI Video Generation
+  - AI Music Generation
+  - Audio Generation
+  - Content Moderation
+  - Creative Tools
+  - Design
+  - Agent-Native
+  - MCP
+apis:
+  - name: BudgetPixel REST API
+    description: >-
+      Credit-metered REST API (private beta) for programmatic access to 36+ AI image, video, and music models, plus
+      content moderation, music-genre classification, format conversion, uploads, cost estimation, and community post
+      publishing. Asynchronous job-based, Bearer API key auth.
+    humanURL: https://budgetpixel.com/api
+    baseURL: https://api.budgetpixel.com/v1
+    tags:
+      - Generative AI
+      - AI Image Generation
+      - AI Video Generation
+      - AI Music Generation
+      - Audio Generation
+      - Content Moderation
+      - Creative Tools
+      - Design
+      - Agent-Native
+      - MCP
+    properties:
+      - type: OpenAPI
+        url: https://docs.budgetpixel.com/openapi.yaml
+      - type: Documentation
+        url: https://docs.budgetpixel.com/introduction
+      - type: LLMsTxt
+        url: https://docs.budgetpixel.com/llms.txt
+  - name: BudgetPixel MCP Server
+    description: >-
+      Hosted remote Model Context Protocol server enabling AI agents (Claude, ChatGPT, Cursor) to generate images,
+      video, and music, upload files, browse the model catalog, check credit balance, view history, and publish
+      community posts. Streamable HTTP transport with OAuth 2.1 / Google SSO auth.
+    humanURL: https://docs.budgetpixel.com
+    baseURL: https://mcp.budgetpixel.com/mcp
+    tags:
+      - Generative AI
+      - AI Image Generation
+      - AI Video Generation
+      - AI Music Generation
+      - Audio Generation
+      - Content Moderation
+      - Creative Tools
+      - Design
+      - Agent-Native
+      - MCP
+    properties:
+      - type: MCPServer
+        url: https://mcp.budgetpixel.com/mcp
+      - type: Documentation
+        url: https://docs.budgetpixel.com
+maintainers:
+  - FN: BudgetPixel
+    url: https://budgetpixel.com
+generated:
+  by: apis.io/add
+  model: claude-opus-4-8
+  confidence: 90
+  at: '2026-08-28T02:54:58.229Z'
