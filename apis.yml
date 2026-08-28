@@ -9,6 +9,18 @@ description: 'BudgetPixel is an AI creative platform offering credit-based acces
   2.1 + PKCE and Google SSO; an A2A agent card and a published Agent Skill; and llms.txt indexes. One credit balance, one
   set of conventions, and identical published prices across every surface.'
 url: https://raw.githubusercontent.com/api-evangelist/ai-image-video-amp-music-generator-design-studio-amp-canvas-/refs/heads/main/apis.yml
+deliveryModel:
+  model: unknown
+  open_source: unknown
+  commercial: true
+  callable_host: false
+  label: Delivery model not determined — needs a product licence on record
+  confidence: low
+  source:
+  - pricing
+  - repository-unlicensed
+  generated: '2026-08-28'
+  method: derived
 created: '2026-08-28'
 modified: '2026-08-28'
 specificationVersion: '0.21'
