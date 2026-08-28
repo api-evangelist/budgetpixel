@@ -1,8 +1,8 @@
 name: BudgetPixel
 description: >-
-  All-in-one AI image, video, music & sound-effect generator with a design studio / infinite canvas and a creator
-  community. Offers a credit-metered REST API, a hosted OAuth-based MCP server, and OpenAPI/llms.txt documentation
-  surfaces spanning 100+ AI models.
+  AI image, video, music and sound-effect generation platform with a free design-studio canvas, community feed, and a
+  unified developer API across 49+ generative media models. Offers a REST API (private beta), OpenAPI contract, hosted
+  MCP servers, and llms.txt indexes.
 url: >-
   https://raw.githubusercontent.com/api-evangelist/ai-image-video-amp-music-generator-design-studio-amp-canvas-/refs/heads/main/apis.yml
 created: '2026-08-28'
@@ -19,12 +19,20 @@ tags:
   - Design
   - Agent-Native
   - MCP
+  - AI
+  - Image Models
+  - Video Models
+  - Music/Audio Generation
+  - Generative Media
+  - MCP Server
+  - llms.txt
+  - Media Processing
 apis:
   - name: BudgetPixel REST API
     description: >-
-      Credit-metered REST API (private beta) for programmatic access to 36+ AI image, video, and music models, plus
-      content moderation, music-genre classification, format conversion, uploads, cost estimation, and community post
-      publishing. Asynchronous job-based, Bearer API key auth.
+      Unified REST API across image, video, music and sound-effect models with an async job model, cost estimation,
+      moderation, conversions, and social publishing. Private beta; requires Premium/Pro/Ultra plans and a Bearer API
+      key.
     humanURL: https://budgetpixel.com/api
     baseURL: https://api.budgetpixel.com/v1
     tags:
@@ -38,6 +46,14 @@ apis:
       - Design
       - Agent-Native
       - MCP
+      - AI
+      - Image Models
+      - Video Models
+      - Music/Audio Generation
+      - Generative Media
+      - MCP Server
+      - llms.txt
+      - Media Processing
     properties:
       - type: OpenAPI
         url: https://docs.budgetpixel.com/openapi.yaml
@@ -45,6 +61,8 @@ apis:
         url: https://docs.budgetpixel.com/introduction
       - type: LLMsTxt
         url: https://docs.budgetpixel.com/llms.txt
+      - type: LLMsTxt
+        url: https://budgetpixel.com/llms.txt
   - name: BudgetPixel MCP Server
     description: >-
       Hosted remote Model Context Protocol server enabling AI agents (Claude, ChatGPT, Cursor) to generate images,
@@ -68,6 +86,47 @@ apis:
         url: https://mcp.budgetpixel.com/mcp
       - type: Documentation
         url: https://docs.budgetpixel.com
+  - name: BudgetPixel Product MCP Server
+    description: >-
+      Hosted Model Context Protocol server giving agents tools to generate images/video/music/SFX, upload references,
+      check pricing and credits, and publish to the community feed. Google sign-in; generation gated to paid plans,
+      catalog browsing open to any account.
+    humanURL: https://docs.budgetpixel.com/mcp-server
+    baseURL: https://mcp.budgetpixel.com/mcp
+    tags:
+      - AI
+      - Image Models
+      - Video Models
+      - Music/Audio Generation
+      - Generative Media
+      - Content Moderation
+      - MCP Server
+      - llms.txt
+      - Creative Tools
+      - Media Processing
+    properties:
+      - type: MCPServer
+        url: https://mcp.budgetpixel.com/mcp
+      - type: Documentation
+        url: https://docs.budgetpixel.com/mcp-server
+  - name: BudgetPixel Docs Search MCP Server
+    description: Read-only MCP server for searching the BudgetPixel documentation.
+    humanURL: https://docs.budgetpixel.com/introduction
+    baseURL: https://docs.budgetpixel.com/mcp
+    tags:
+      - AI
+      - Image Models
+      - Video Models
+      - Music/Audio Generation
+      - Generative Media
+      - Content Moderation
+      - MCP Server
+      - llms.txt
+      - Creative Tools
+      - Media Processing
+    properties:
+      - type: MCPServer
+        url: https://docs.budgetpixel.com/mcp
 maintainers:
   - FN: BudgetPixel
     url: https://budgetpixel.com
@@ -75,4 +134,4 @@ generated:
   by: apis.io/add
   model: claude-opus-4-8
   confidence: 90
-  at: '2026-08-28T02:54:58.229Z'
+  at: '2026-08-28T02:54:24.589Z'
