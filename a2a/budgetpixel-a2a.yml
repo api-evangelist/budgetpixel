@@ -1,0 +1,64 @@
+generated: '2026-08-28'
+method: probed
+source: https://docs.budgetpixel.com/.well-known/agent-card.json
+discovery:
+  path: /.well-known/agent-card.json
+  canonical: true
+  host: docs.budgetpixel.com
+  note: Served from the documentation host only. The apex (budgetpixel.com), the API host (api.budgetpixel.com)
+    and the MCP host (mcp.budgetpixel.com) all return 404 on both /.well-known/agent-card.json and the
+    legacy /.well-known/agent.json.
+x-evidence:
+  fetched: '2026-08-28'
+  url: https://docs.budgetpixel.com/.well-known/agent-card.json
+  http_status: 200
+  content_type: application/json
+  bytes: 1063
+  body_shape: JSON object carrying name, url, version, protocolVersion, provider, capabilities, skills
+    -- 7 of the AgentCard fields, not an SPA HTML shell
+card:
+  file: a2a/budgetpixel-agent-card.json
+  name: BudgetPixel API
+  version: 1.0.0
+  protocol_version: '0.3'
+  url: https://docs.budgetpixel.com/
+  preferred_transport: HTTP+JSON
+  skill_count: 1
+grade: conformant
+grade_basis: 'All three A2A 1.0.0 hard checks pass: capabilities is a JSON object ({streaming:false, pushNotifications:false}),
+  protocolVersion is present, and skills is an array. preferredTransport, defaultInputModes and defaultOutputModes
+  -- the optional fields whose absence downgrades a card to near-conformant -- are all present.'
+deviations:
+- field: protocolVersion
+  observed: '0.3'
+  issue: The card declares A2A 0.3, not 1.0.0. It is graded against 1.0.0 because that is the current
+    spec, and it passes; but a strict 1.0.0 client reading the declared version may negotiate down.
+- field: url
+  observed: https://docs.budgetpixel.com/
+  issue: The card advertises the documentation site root as the agent endpoint. That URL serves HTML,
+    not an A2A JSON-RPC transport, so an A2A client following it reaches a docs page rather than an agent.
+    supportedInterfaces repeats the same docs URL.
+- field: provider.organization
+  observed: BudgetPixel API
+  issue: Names the API rather than the legal organization (BudgetPixel / BudgetPixel AI).
+- field: skills[0].tags
+  observed: []
+  issue: Empty tag array -- the skill cannot be matched by capability keyword.
+- field: capabilities
+  observed:
+    streaming: false
+    pushNotifications: false
+  issue: Both agent-interaction capabilities are declared false, so the card asserts a non-streaming,
+    non-push agent even though the product MCP server does run streamable HTTP.
+skills:
+- id: budgetpixel
+  name: Budgetpixel
+  url: https://docs.budgetpixel.com/.well-known/agent-skills/budgetpixel/skill.md
+  status: 200
+  saved: skills/budgetpixel-provider-published-skill.md
+  note: The skill URL the card points at is LIVE and returns a real 13KB Agent Skill markdown document
+    with frontmatter. Saved verbatim.
+assessment: A real, provider-published agent card that passes every hard A2A 1.0.0 check and links a live,
+  substantive agent skill -- but it is a documentation-site card, not a callable agent endpoint. The genuinely
+  callable agent surface at BudgetPixel is the MCP server at https://mcp.budgetpixel.com/mcp (see mcp/budgetpixel-mcp.yml),
+  which the card does not reference.

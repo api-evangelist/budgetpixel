@@ -1,0 +1,91 @@
+generated: '2026-08-28'
+method: searched
+source: https://docs.budgetpixel.com/authentication
+derived_from: openapi/budgetpixel-openapi.yaml components.securitySchemes
+docs: https://docs.budgetpixel.com/authentication
+summary:
+  types:
+  - http
+  - oauth2
+  note: TWO independent auth models on two different surfaces. The REST API is bearer API key only. The
+    MCP server is OAuth 2.1 + Google SSO and shares no credential with the REST API.
+schemes:
+- name: ApiKeyAuth
+  surface: REST API (https://api.budgetpixel.com/v1)
+  type: http
+  scheme: bearer
+  bearerFormat: bpx_live_*
+  header: 'Authorization: Bearer bpx_live_xxx'
+  applied: root-level security requirement -- all 74 operations
+  description: API key as a bearer token. Created, named and revoked from the BudgetPixel account dashboard.
+  key_management:
+    shown_once: true
+    retrievable: false
+    note: The full secret is displayed once at creation and cannot be retrieved afterwards -- only its
+      prefix, to identify the key. Revocation takes effect immediately.
+    rotation_policy: Not published. No documented expiry, no scheduled rotation, no scoped or restricted
+      keys.
+  gate:
+    plans:
+    - Premium
+    - Pro
+    - Ultra
+    beta: private beta access additionally required
+    denial: 403 api_access_not_enabled
+  errors:
+  - status: 401
+    code: missing_api_key
+    meaning: No Authorization header
+    probed: confirmed live on GET https://api.budgetpixel.com/v1/models 2026-08-28
+  - status: 401
+    code: invalid_api_key
+    meaning: Key is unknown or revoked
+  - status: 403
+    code: api_access_not_enabled
+    meaning: Account plan cannot use the API
+  - status: 403
+    code: account_banned
+    meaning: Account is banned
+  guidance: 'Provider warns explicitly: never embed in client-side code, mobile apps or public repositories
+    -- anyone with the key can spend the account credits. Call from a backend and hold keys in env vars
+    or a secrets manager.'
+  sources:
+  - openapi/budgetpixel-openapi.yaml
+  - https://docs.budgetpixel.com/authentication
+- name: MCPOAuth
+  surface: MCP server (https://mcp.budgetpixel.com/mcp)
+  type: oauth2
+  flow: authorization_code
+  pkce: S256 (required)
+  grant_types:
+  - authorization_code
+  - refresh_token
+  identity_provider: Google SSO
+  dynamic_client_registration: https://mcp.budgetpixel.com/oauth/register (RFC 7591)
+  authorization_endpoint: https://mcp.budgetpixel.com/oauth/authorize
+  token_endpoint: https://mcp.budgetpixel.com/oauth/token
+  token_endpoint_auth_methods:
+  - client_secret_post
+  - client_secret_basic
+  scopes:
+  - openid
+  - profile
+  bearer_methods:
+  - header
+  discovery:
+  - https://mcp.budgetpixel.com/.well-known/oauth-authorization-server (RFC 8414, 200)
+  - https://mcp.budgetpixel.com/.well-known/oauth-protected-resource (RFC 9728, 200)
+  anonymous_surface: JSON-RPC initialize and tools/list answer with NO token (verified 2026-08-28). Only
+    tool calls require the session.
+  note: 'No API key is involved on this surface at all -- the provider states plainly "There are no API
+    keys involved". Authorization beyond identity is enforced by the account PLAN, not by scope: any account
+    can call list_models, while generation, uploads and posting require Premium/Pro/Ultra.'
+  scopes_detail: scopes/budgetpixel-scopes.yml
+  sources:
+  - https://mcp.budgetpixel.com/.well-known/oauth-authorization-server
+  - https://docs.budgetpixel.com/mcp-server
+gaps:
+- No mutual TLS, no request signing, no IP allowlisting documented.
+- No scoped or least-privilege API keys -- one key grants the full 74-operation surface including the
+  public createPost.
+- No OpenID Connect discovery document is served, despite the openid scope being advertised.

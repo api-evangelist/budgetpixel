@@ -1,14 +1,51 @@
 name: BudgetPixel
-description: >-
-  AI image, video, music and sound-effect generation platform with a free design-studio canvas, community feed, and a
-  unified developer API across 49+ generative media models. Offers a REST API (private beta), OpenAPI contract, hosted
-  MCP servers, and llms.txt indexes.
-url: >-
-  https://raw.githubusercontent.com/api-evangelist/ai-image-video-amp-music-generator-design-studio-amp-canvas-/refs/heads/main/apis.yml
+aid: budgetpixel
+description: 'BudgetPixel is an AI creative platform offering credit-based access to 70+ generative media models for image,
+  video, music and sound-effect generation, plus upscaling, lip sync, motion control, format conversion and content moderation.
+  Alongside a free design-studio canvas, LoRA training and a public community feed, it ships a unified developer surface:
+  a 74-operation OpenAPI 3.1 REST API at api.budgetpixel.com/v1 (private beta, bearer bpx_live_* keys, Premium/Pro/Ultra plans)
+  with an asynchronous create-then-poll job model and a POST /v1/cost endpoint that quotes the exact credit charge before
+  you commit; a first-party remote MCP server at mcp.budgetpixel.com/mcp exposing 12 tools over streamable HTTP with OAuth
+  2.1 + PKCE and Google SSO; an A2A agent card and a published Agent Skill; and llms.txt indexes. One credit balance, one
+  set of conventions, and identical published prices across every surface.'
+url: https://raw.githubusercontent.com/api-evangelist/ai-image-video-amp-music-generator-design-studio-amp-canvas-/refs/heads/main/apis.yml
 created: '2026-08-28'
 modified: '2026-08-28'
 specificationVersion: '0.21'
 tags:
+- Generative AI
+- AI Image Generation
+- AI Video Generation
+- AI Music Generation
+- Audio Generation
+- Content Moderation
+- Creative Tools
+- Design
+- Agent-Native
+- MCP
+- MCP Server
+- AI
+- Image Models
+- Video Models
+- Music/Audio Generation
+- Generative Media
+- llms.txt
+- Media Processing
+- Text-to-Image
+- Text-to-Video
+- Upscaling
+- Credits
+- Model Aggregator
+- Agent Card
+apis:
+- name: BudgetPixel REST API
+  description: Unified REST API across image, video, music and sound-effect models with an asynchronous create-then-poll job
+    model, per-model endpoints (the path IS the model slug), a cost-quoting endpoint, input moderation with stable machine-readable
+    restriction reasons, format conversions and social publishing. 74 operations, OpenAPI 3.1.0. Private beta; requires a
+    Premium, Pro or Ultra plan and a Bearer bpx_live_* API key.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
   - Generative AI
   - AI Image Generation
   - AI Video Generation
@@ -16,122 +53,159 @@ tags:
   - Audio Generation
   - Content Moderation
   - Creative Tools
-  - Design
+  - Media Processing
+  - Generative Media
+  - Upscaling
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-openapi.yaml
+  - type: OpenAPI
+    url: https://api.budgetpixel.com/openapi.yaml
+  - type: Overlay
+    url: overlays/budgetpixel-openapi-overlay.yaml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- name: BudgetPixel MCP Server
+  description: First-party hosted remote Model Context Protocol server (streamable HTTP, protocol 2025-06-18) giving agents
+    12 tools to generate images, video, music and sound effects on the signed-in account, upscale image and video, upload
+    reference media, browse the live model catalogue and prices, read the credit balance and generation history, and publish
+    to the public community feed. OAuth 2.1 + PKCE with Google SSO and dynamic client registration; no API key. Catalogue
+    browsing is open to any account, generation requires Premium, Pro or Ultra.
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
   - Agent-Native
   - MCP
+  - MCP Server
   - AI
+  - Generative Media
   - Image Models
   - Video Models
   - Music/Audio Generation
-  - Generative Media
+  - Creative Tools
+  properties:
+  - type: MCPServer
+    url: https://mcp.budgetpixel.com/mcp
+    description: 'PRODUCT MCP, live: 12 tools (generate_image, generate_video, generate_music, generate_sound_effect, upscale_image,
+      upscale_video, check_generation_status, get_credit_balance...). Streamable HTTP with a session handshake -- tools/list
+      without a prior initialize returns 400 "No session ID and not an initialize request", which reads as broken but is correct
+      protocol. Verified 2026-08-28.'
+  - type: MCPServer
+    url: mcp/budgetpixel-mcp.yml
+  - type: ToolCrosswalk
+    url: mcp/budgetpixel-tool-crosswalk.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/mcp-server
+  - type: OAuthScopes
+    url: scopes/budgetpixel-scopes.yml
+  - type: SourceCode
+    url: https://github.com/budgetpixel-ai/budgetpixel-mcp
+- name: BudgetPixel Docs Search MCP Server
+  description: Read-only MCP server hosted on the BudgetPixel documentation site (Mintlify) giving agents two tools -- full-text
+    documentation search and a sandboxed read-only filesystem query over the docs pages and the OpenAPI spec. Answers tools/list
+    anonymously; useful alongside the REST API so an agent can answer its own integration questions.
+  humanURL: https://docs.budgetpixel.com/introduction
+  baseURL: https://docs.budgetpixel.com/mcp
+  tags:
+  - Agent-Native
+  - MCP
   - MCP Server
-  - llms.txt
-  - Media Processing
-apis:
-  - name: BudgetPixel REST API
-    description: >-
-      Unified REST API across image, video, music and sound-effect models with an async job model, cost estimation,
-      moderation, conversions, and social publishing. Private beta; requires Premium/Pro/Ultra plans and a Bearer API
-      key.
-    humanURL: https://budgetpixel.com/api
-    baseURL: https://api.budgetpixel.com/v1
-    tags:
-      - Generative AI
-      - AI Image Generation
-      - AI Video Generation
-      - AI Music Generation
-      - Audio Generation
-      - Content Moderation
-      - Creative Tools
-      - Design
-      - Agent-Native
-      - MCP
-      - AI
-      - Image Models
-      - Video Models
-      - Music/Audio Generation
-      - Generative Media
-      - MCP Server
-      - llms.txt
-      - Media Processing
-    properties:
-      - type: OpenAPI
-        url: https://docs.budgetpixel.com/openapi.yaml
-      - type: Documentation
-        url: https://docs.budgetpixel.com/introduction
-      - type: LLMsTxt
-        url: https://docs.budgetpixel.com/llms.txt
-      - type: LLMsTxt
-        url: https://budgetpixel.com/llms.txt
-  - name: BudgetPixel MCP Server
-    description: >-
-      Hosted remote Model Context Protocol server enabling AI agents (Claude, ChatGPT, Cursor) to generate images,
-      video, and music, upload files, browse the model catalog, check credit balance, view history, and publish
-      community posts. Streamable HTTP transport with OAuth 2.1 / Google SSO auth.
-    humanURL: https://docs.budgetpixel.com
-    baseURL: https://mcp.budgetpixel.com/mcp
-    tags:
-      - Generative AI
-      - AI Image Generation
-      - AI Video Generation
-      - AI Music Generation
-      - Audio Generation
-      - Content Moderation
-      - Creative Tools
-      - Design
-      - Agent-Native
-      - MCP
-    properties:
-      - type: MCPServer
-        url: https://mcp.budgetpixel.com/mcp
-      - type: Documentation
-        url: https://docs.budgetpixel.com
-  - name: BudgetPixel Product MCP Server
-    description: >-
-      Hosted Model Context Protocol server giving agents tools to generate images/video/music/SFX, upload references,
-      check pricing and credits, and publish to the community feed. Google sign-in; generation gated to paid plans,
-      catalog browsing open to any account.
-    humanURL: https://docs.budgetpixel.com/mcp-server
-    baseURL: https://mcp.budgetpixel.com/mcp
-    tags:
-      - AI
-      - Image Models
-      - Video Models
-      - Music/Audio Generation
-      - Generative Media
-      - Content Moderation
-      - MCP Server
-      - llms.txt
-      - Creative Tools
-      - Media Processing
-    properties:
-      - type: MCPServer
-        url: https://mcp.budgetpixel.com/mcp
-      - type: Documentation
-        url: https://docs.budgetpixel.com/mcp-server
-  - name: BudgetPixel Docs Search MCP Server
-    description: Read-only MCP server for searching the BudgetPixel documentation.
-    humanURL: https://docs.budgetpixel.com/introduction
-    baseURL: https://docs.budgetpixel.com/mcp
-    tags:
-      - AI
-      - Image Models
-      - Video Models
-      - Music/Audio Generation
-      - Generative Media
-      - Content Moderation
-      - MCP Server
-      - llms.txt
-      - Creative Tools
-      - Media Processing
-    properties:
-      - type: MCPServer
-        url: https://docs.budgetpixel.com/mcp
+  - AI
+  - Documentation
+  properties:
+  - type: MCPServer
+    url: https://docs.budgetpixel.com/mcp
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
 maintainers:
-  - FN: BudgetPixel
-    url: https://budgetpixel.com
+- FN: BudgetPixel
+  email: support@budgetpixel.com
+  url: https://budgetpixel.com
 generated:
   by: apis.io/add
   model: claude-opus-4-8
   confidence: 90
   at: '2026-08-28T02:54:24.589Z'
+common:
+- type: DeveloperPortal
+  url: https://budgetpixel.com/api
+- type: Documentation
+  url: https://docs.budgetpixel.com/introduction
+- type: APIReference
+  url: https://docs.budgetpixel.com/api-reference
+- type: GettingStarted
+  url: https://docs.budgetpixel.com/quickstart
+- type: Pricing
+  url: https://budgetpixel.com/pricing
+- type: Plans
+  url: plans/budgetpixel-plans-pricing.yml
+- type: TermsOfService
+  url: https://budgetpixel.com/terms
+- type: PrivacyPolicy
+  url: https://budgetpixel.com/privacy
+- type: Support
+  url: https://budgetpixel.com/contact
+- type: HelpCenter
+  url: https://budgetpixel.com/faq
+- type: Community
+  url: https://discord.gg/tDbT2RDmkw
+- type: Blog
+  url: https://budgetpixel.com/blog
+- type: GitHubOrganization
+  url: https://github.com/budgetpixel-ai
+- type: MCPServer
+  url: mcp/budgetpixel-mcp.yml
+- type: ToolCrosswalk
+  url: mcp/budgetpixel-tool-crosswalk.yml
+- type: AgentCard
+  url: a2a/budgetpixel-a2a.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: LLMsTxt
+  url: llms/budgetpixel-llms.txt
+- type: WellKnown
+  url: well-known/budgetpixel-well-known.yml
+- type: Authentication
+  url: authentication/budgetpixel-authentication.yml
+- type: OAuthScopes
+  url: scopes/budgetpixel-scopes.yml
+- type: Conventions
+  url: conventions/budgetpixel-conventions.yml
+- type: ErrorCatalog
+  url: errors/budgetpixel-problem-types.yml
+- type: RateLimits
+  url: rate-limits/budgetpixel-rate-limits.yml
+- type: Lifecycle
+  url: lifecycle/budgetpixel-lifecycle.yml
+- type: Conformance
+  url: conformance/budgetpixel-conformance.yml
+- type: DataModel
+  url: data-model/budgetpixel-data-model.yml
+- type: Packages
+  url: packages/budgetpixel-packages.yml
+- type: Overlay
+  url: overlays/budgetpixel-openapi-overlay.yaml
+- type: DomainSecurity
+  url: security/budgetpixel-domain-security.yml
+image: https://budgetpixel.com/logo.png
+x-enrichment:
+  date: '2026-08-28'
+  status: enriched
+  artifacts_added: 30
+  pass: local-v1

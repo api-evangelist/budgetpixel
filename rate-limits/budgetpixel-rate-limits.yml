@@ -1,0 +1,74 @@
+generated: '2026-08-28'
+method: searched
+source: https://docs.budgetpixel.com/concepts/rate-limits
+corroborated_by:
+- openapi/budgetpixel-openapi.yaml info.description
+- live probe of https://api.budgetpixel.com/v1/models 2026-08-28
+limit_count: 3
+response_headers:
+- X-RateLimit-Limit
+- X-RateLimit-Remaining
+- X-RateLimit-Reset
+- Retry-After
+exhaustion_status: 429
+header_semantics:
+  X-RateLimit-Limit: total requests allowed in the current window
+  X-RateLimit-Remaining: requests left in the current window
+  X-RateLimit-Reset: SECONDS until the window resets (not a unix timestamp)
+  Retry-After: seconds to wait, sent only on 429
+probed_evidence:
+  url: https://api.budgetpixel.com/v1/models
+  method: GET
+  auth: none
+  http_status: 401
+  observed_headers:
+    x-ratelimit-limit: '1200'
+    x-ratelimit-remaining: '1199'
+    x-ratelimit-reset: '60'
+  note: The rate-limit headers are emitted even on an unauthenticated 401, so an agent can read its standing
+    before it has a key. The 1200 value confirms the per-IP bucket applies when no key identifies the
+    caller.
+limits:
+- scope: per-api-key
+  window: 1 minute (fixed)
+  limit: 600
+  unit: requests
+  burst: null
+  applies_to: all /v1 endpoints
+  note: Documented as a default that may be tuned; the docs tell callers to read the headers rather than
+    hard-code it.
+- scope: per-source-ip
+  window: 1 minute (fixed)
+  limit: 1200
+  unit: requests
+  burst: null
+  applies_to: all /v1 endpoints
+  note: Whichever of the key or IP limit is hit first applies. Confirmed live on an anonymous request.
+- scope: per-account
+  window: 1 minute (rolling)
+  limit: 60
+  unit: uploads
+  applies_to: POST /v1/uploads (operationId uploadMedia)
+  note: A tighter cap on top of the per-key and per-IP limits, because uploads are free and unmetered.
+    Returns the same 429 + Retry-After.
+concurrency:
+  note: 'Separate from request rate limits: generation jobs have a per-plan concurrency cap on in-flight
+    jobs -- Starter 2, Basic 3, Premium 5, Pro 7, Ultra 10 (the same cap as the web workshop). Polling
+    status never counts against it, and concurrency NEVER appears in the X-RateLimit-* headers, so an
+    agent cannot detect it from response headers alone.'
+  source: https://budgetpixel.com/pricing + https://docs.budgetpixel.com/concepts/rate-limits
+social_limit:
+  scope: per-account
+  window: 1 hour
+  limit: 20
+  unit: posts
+  applies_to: create_social_post (MCP) / POST /v1/posts
+  source: https://docs.budgetpixel.com/mcp-server
+error_body:
+  error:
+    code: rate_limited
+    message: Rate limit exceeded. Retry after 60 seconds.
+    type: rate_limit_error
+retry_guidance: Rejected requests STILL COUNT against the window, so a tight retry loop keeps the caller
+  limited indefinitely. On 429, sleep the full Retry-After before sending anything else; add jitter when
+  several workers share a key or IP.

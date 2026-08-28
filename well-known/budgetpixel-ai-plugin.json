@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "BudgetPixel AI",
+  "name_for_model": "budgetpixel",
+  "description_for_human": "Create AI images, videos, and audio with 50+ models including FLUX, Sora, Kling, and more.",
+  "description_for_model": "BudgetPixel is an AI creative platform providing access to 50+ state-of-the-art models for image generation (FLUX 2 Pro, Ideogram, Qwen Image, Nano Banana Pro), video generation (Sora 2, Kling v2.6, Veo 3.1), and audio synthesis (Lyria 2, Stable Audio). Users can generate images from text prompts, edit existing images, create videos from text or images, and produce music. The platform includes social features: a community gallery to browse and share AI art, user profiles with portfolios, likes, comments, and the ability to remix others' creations. Free tier offers 300 monthly credits, paid plans start at $9.99/month. Supports custom LoRA training for personalized models.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://budgetpixel.com/api/openapi.json"
+  },
+  "logo_url": "https://budgetpixel.com/logo.png",
+  "contact_email": "support@budgetpixel.com",
+  "legal_info_url": "https://budgetpixel.com/terms"
+}

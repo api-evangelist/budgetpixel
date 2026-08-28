@@ -1,0 +1,48 @@
+generated: '2026-08-28'
+method: searched
+source: https://docs.budgetpixel.com/.well-known/agent-skills/budgetpixel/skill.md (provider-published)
+  + generated from openapi/budgetpixel-openapi.yaml
+skills:
+- name: budgetpixel
+  file: skills/budgetpixel-provider-published-skill.md
+  method: searched
+  source: https://docs.budgetpixel.com/.well-known/agent-skills/budgetpixel/skill.md
+  http_status: 200
+  bytes: 13188
+  description: The provider own packaged Agent Skill, saved VERBATIM. Referenced by skills[0].url in the
+    A2A agent card at https://docs.budgetpixel.com/.well-known/agent-card.json. Covers API authentication,
+    async job polling, credit pricing, model selection, and troubleshooting generation failures and rate
+    limits.
+- name: budgetpixel-generate-image
+  file: skills/budgetpixel-generate-image.md
+  method: generated
+  description: 'Price-then-generate flow for images: listModels, estimateCost, getCredits, uploadMedia,
+    createImage_*, getImage. Every operationId verified against the spec.'
+  operations:
+  - listModels
+  - estimateCost
+  - getCredits
+  - uploadMedia
+  - createImage_flux_2_pro
+  - createImage_p_image_edit
+  - getImage
+- name: budgetpixel-generate-video
+  file: skills/budgetpixel-generate-video.md
+  method: generated
+  description: The expensive surface. Covers per-second-by-resolution pricing and the reference-video
+    INPUT billing that several models apply, then submit and long-poll. Every operationId verified against
+    the spec.
+  operations:
+  - listModels
+  - estimateCost
+  - getCredits
+  - uploadMedia
+  - createVideo_seedance_2_5
+  - createVideo_wan_3_0_video
+  - createVideo_kling_v3_0_pro
+  - getVideo
+  - createVideoUpscale_topazlabs_video_upscale
+  - getVideoUpscaleJob
+note: 'Generated skills are grounded in operationIds read directly from openapi/budgetpixel-openapi.yaml
+  -- none is invented. Both carry the two cross-cutting warnings that matter most on this API: there is
+  no idempotency key and there is no reversal operation of any kind.'

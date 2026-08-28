@@ -1,0 +1,58 @@
+generated: '2026-08-28'
+method: searched
+source: https://docs.budgetpixel.com/introduction#availability + openapi/budgetpixel-openapi.yaml info.version
+maturity: private-beta
+maturity_note: 'The developer REST API is explicitly in PRIVATE BETA: "Access is limited while we finalize
+  the launch." Beta access plus a Premium, Pro or Ultra plan is required to mint a key. The MCP server,
+  by contrast, is generally available to any account that signs in (with generation gated to the same
+  three plans).'
+versioning:
+  scheme: date-based document version plus a URL path major
+  spec_version: '2026-06-20'
+  url_versioning: https://api.budgetpixel.com/v1 -- a single /v1 path segment; no version header, no Accept-Version,
+    no per-request version pin documented
+  note: 'The OpenAPI info.version is a date (2026-06-20) but nothing in the docs states a version POLICY:
+    no statement of what constitutes a breaking change, no notice period, and no way for a caller to pin
+    the older shape.'
+deprecation:
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  deprecated_operations: []
+  note: 'No deprecation policy page, no RFC 8594 Sunset/Deprecation header documented, and ZERO of the
+    74 published operations carry `deprecated: true`. The absence of deprecated operations is expected
+    for an API this young; the absence of a policy is the gap.'
+change_communication:
+  changelog: false
+  probed:
+  - url: https://docs.budgetpixel.com/changelog
+    status: 404
+  - url: https://budgetpixel.com/changelog
+    status: 404
+  note: No dated changelog on either the docs host or the marketing site. With 49 upstream third-party
+    models behind the API (Flux, Kling, SeeDance, Qwen, Veo, GPT Image, Topaz), model add/remove churn
+    is the most likely source of breaking change and there is no published record of it.
+status_page:
+  published: false
+  probed:
+  - url: https://budgetpixel.com/status
+    status: 404
+  note: No status page found on the marketing site, the docs host, or a status.budgetpixel.com subdomain
+    reference anywhere in the docs.
+sla:
+  published: false
+  note: No SLA or uptime commitment published. The docs do describe soft timing expectations -- images
+    and sound effects in seconds, music and video in minutes -- and a terminal `timeout` job state, but
+    these are behavioural notes, not a commitment.
+support:
+  email: support@budgetpixel.com
+  contact_page: https://budgetpixel.com/contact
+  community:
+  - https://discord.gg/tDbT2RDmkw
+  - https://reddit.com/r/budgetpixel
+model_lifecycle:
+  note: GET /v1/models (listModels) is the de-facto lifecycle surface for the thing that actually churns
+    -- the model catalogue. The docs tell callers to cache it for minutes to hours and to treat a 400
+    model_not_available as the signal that a model has gone. That is a runtime discovery mechanism standing
+    in for a published deprecation policy.

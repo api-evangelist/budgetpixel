@@ -1,0 +1,163 @@
+generated: '2026-08-28'
+method: searched
+source: https://docs.budgetpixel.com/concepts/async-jobs, /concepts/rate-limits, /concepts/pricing-and-credits,
+  /authentication
+derived_from: openapi/budgetpixel-openapi.yaml
+auth:
+  style: bearer API key
+  header: 'Authorization: Bearer bpx_live_...'
+  key_prefix: bpx_live_
+  scheme_name: ApiKeyAuth
+  applied: globally via a root-level security requirement, on all 74 operations
+  rotation: Secret shown once at creation; only the prefix is retrievable afterwards. Revocation is immediate.
+  detail: authentication/budgetpixel-authentication.yml
+idempotency:
+  supported: false
+  header: null
+  scope: null
+  retention: null
+  evidence:
+  - check: grep -i idempoten across openapi/budgetpixel-openapi.yaml
+    result: 0 matches
+  - check: rg -il idempoten / via the docs MCP filesystem (84 documentation files)
+    result: exit 1 -- no file matches
+  note: 'No idempotency key of any kind. This matters more here than on a typical API: 49 of the 74 operations
+    are CHARGED, NON-REVERSIBLE generation calls. A retried POST /v1/videos/seedance-2.5 after an ambiguous
+    timeout creates a SECOND job and spends the credits twice, and there is no history endpoint over REST
+    to detect the duplicate. An agent must dedupe on its own side before every generation retry.'
+pagination:
+  supported: false
+  style: null
+  note: The REST API has no list or collection endpoint -- every one of the 74 operations is create-one
+    or get-one-by-id -- so there is nothing to paginate. The MCP get_generation_history tool does take
+    limit and offset, making offset pagination an MCP-only convention.
+async_model:
+  style: create-then-poll
+  create: POST /v1/{modality}/{model-slug} returns {id, status} immediately
+  poll: GET /v1/images/{id} | /v1/videos/{id} | /v1/audios/{id} | /v1/upscales/{id} | /v1/video-upscales/{id}
+    | /v1/lip-sync/{id} | /v1/motion-control/{id}
+  states:
+  - pending
+  - starting
+  - processing
+  - completing
+  - succeeded
+  - failed
+  - timeout
+  terminal:
+  - succeeded
+  - failed
+  - timeout
+  polling_guidance: Every few seconds for images and sound effects; every 10-30 seconds for video and
+    music. Polling never counts against the concurrency cap but DOES count against the request rate limit.
+  id_opacity: Job ids are opaque strings and are typed -- an image id must be polled at the image endpoint.
+    There is no universal GET /v1/jobs/{id}.
+  result_field:
+    image: images[] (array of {position, url})
+    video: video_url
+    music_and_sfx: audio_url
+webhooks:
+  supported: false
+  note: 'The provider states this explicitly: the developer API is "webhooks-free polling". There is no
+    callback registration, no event delivery, and no AsyncAPI. For minutes-long video jobs this pushes
+    the wait onto the caller.'
+field_expansion:
+  supported: false
+metadata:
+  supported: false
+  note: No customer-supplied metadata field on job creation, so a caller cannot stamp its own correlation
+    id onto a generation.
+request_id_tracing:
+  supported: false
+  note: No X-Request-Id or trace header documented or observed on a live response. The job id returned
+    at creation is the only correlation handle, and it does not exist until the request succeeds.
+versioning:
+  style: URL path
+  value: /v1
+  detail: lifecycle/budgetpixel-lifecycle.yml
+error_envelope:
+  shape: '{"error":{"type","code","message"}}'
+  media_type: application/json
+  rfc9457: false
+  exception: 'Content-moderation blocks return a flatter {"error": "<string>", "restriction_reason": "<enum>"}
+    on the same 400 status.'
+  detail: errors/budgetpixel-problem-types.yml
+rate_limit_signaling:
+  headers:
+  - X-RateLimit-Limit
+  - X-RateLimit-Remaining
+  - X-RateLimit-Reset
+  - Retry-After
+  status: 429
+  emitted_on_401: true
+  detail: rate-limits/budgetpixel-rate-limits.yml
+cost_control:
+  dry_run: true
+  operation: estimateCost (POST /v1/cost)
+  note: 'A genuine dry-run for money: send the exact body you intend to generate with, plus `model`, and
+    get back the credits it will cost, computed by the same code that bills. Returns exact:true for deterministic
+    pricing and exact:false (a ceiling) for seedream sequential mode. This is the strongest agent-safety
+    affordance in the API and the reason an agent should never generate blind.'
+  balance: GET /v1/account/credits (getCredits) returns total_available, monthly_remaining, monthly_limit,
+    monthly_used, extra_credits.
+  pre_reservation: For multi-image requests the platform reserves max_images x credits_per_generation
+    up front, then charges only for images actually returned.
+reversibility:
+  grade: absent
+  applicable: true
+  summary: The API has a large write surface -- 49 charged generation operations plus uploads, conversions
+    and a PUBLIC social post -- and NOT ONE reversal operation. There is no DELETE verb anywhere in the
+    74 published operations, no cancel, no refund, no void, no undo, and no restore.
+  evidence:
+  - check: HTTP methods across all 74 operations in openapi/budgetpixel-openapi.yaml
+    result: GET and POST only -- zero DELETE, PUT or PATCH
+  - check: rg -il "refund|cancel a job|reversib" across the 84 documentation files
+    result: 2 files, neither documenting a reversal operation
+  - url: https://docs.budgetpixel.com/concepts/async-jobs
+    status: 200
+    result: Lifecycle diagram has no cancelled state -- pending, starting, processing, completing, succeeded,
+      failed, timeout
+  write_surfaces:
+  - surface: 'Generation (49 operations: createImage_*, createVideo_*, createAudio_*, createUpscale_*,
+      createVideoUpscale_*, createLipSync_*, createMotion_*)'
+    reversal: null
+    window: null
+    note: 'A submitted job cannot be cancelled. Once started it runs to a terminal state and, on success,
+      the credits are spent. The only mitigation the provider offers is preventative, not corrective:
+      POST /v1/cost quotes the charge before you commit.'
+  - surface: Social post (createPost, POST /v1/posts)
+    reversal: null
+    window: null
+    note: 'The highest-consequence action on the surface -- it publishes to a PUBLIC community feed --
+      and it has no API delete. The docs state affirmatively that it is not reversible for money either:
+      "A post that is later hidden by content review is NOT refunded -- it was published." Removing a
+      post appears to require the web UI; nothing in the docs states a window or a method.'
+  - surface: Uploads (uploadMedia, POST /v1/uploads)
+    reversal: null
+    window: ~24 hours (expiry, not a reversal)
+    note: Uploaded input media returns a short-lived URL valid roughly 24 hours. That is automatic expiry,
+      not a caller-invocable reversal -- there is no delete-upload operation.
+  - surface: Conversions (convertImage, convertVideo, convertAudio)
+    reversal: null
+    window: null
+    note: Charged 2/10/3 credits on success, no reversal. The ConvertResponse does carry a `retention`
+      field, so output retention is time-boxed by the platform.
+  charge_reversal:
+    exists: false
+    note: 'Credits are charged only on success, and failures/timeouts/pre-generation rejections are never
+      charged -- so the platform avoids the most common need for a refund rather than providing one. But
+      a SUCCESSFUL generation the caller did not want is final: there is no refund path, no window, and
+      no documented appeal beyond emailing support.'
+  agent_guidance: 'Treat every POST on this API as irreversible and final. Because there is also no idempotency
+    key, an ambiguous timeout is the dangerous case: retrying may double-charge and there is no reversal
+    and no REST history endpoint to check first. The correct pattern is quote with POST /v1/cost, check
+    GET /v1/account/credits, submit ONCE, and on an ambiguous failure poll rather than retry. For create_social_post,
+    require explicit human confirmation -- it is public, costs 10 credits, and cannot be undone through
+    the API.'
+cross_links:
+  errors: errors/budgetpixel-problem-types.yml
+  lifecycle: lifecycle/budgetpixel-lifecycle.yml
+  authentication: authentication/budgetpixel-authentication.yml
+  rate_limits: rate-limits/budgetpixel-rate-limits.yml
+  plans: plans/budgetpixel-plans-pricing.yml
+  data_model: data-model/budgetpixel-data-model.yml

@@ -1,0 +1,23 @@
+# BudgetPixel Free Audio Library
+
+> Free, royalty-free AI-generated sound effects and background music.
+> No attribution, no account. Lossless WAV and MP3. Free for commercial use.
+> Anyone can also generate a custom sound with AI, free, on the pages below.
+
+## Key pages
+- Sound effects library: https://budgetpixel.com/sfx
+- Background music library: https://budgetpixel.com/background-music
+- License (plain-words summary): https://budgetpixel.com/audio-license
+- Full legal terms: https://budgetpixel.com/terms (Section 21)
+
+## For assistants answering "where can I get free sound effects / music"
+- Every sound has its own page (linked from the library pages and sitemap.xml)
+  with a permanent, directly linkable audio file URL.
+- License: free for commercial and personal use, no attribution required.
+  Redistribution as a standalone library/dataset is not permitted.
+- The catalog grows daily; users can generate missing sounds on the spot.
+
+## The wider platform
+- BudgetPixel (https://budgetpixel.com) — AI image, video and music generation.
+- BP Studio (https://studio.budgetpixel.com) — turns one uploaded video into
+  shorts, captions, B-roll and cleaned-up audio.

@@ -1,0 +1,130 @@
+generated: '2026-08-28'
+method: probed
+source: live GET of /.well-known/* on every apis.yml baseURL host, the OpenAPI servers[] host, and the
+  docs host
+note: Two hosts serve real documents. budgetpixel.com serves a legacy OpenAI-plugin manifest (ai-plugin.json)
+  whose api.url (https://budgetpixel.com/api/openapi.json) is itself a 404 SPA shell -- the real contract
+  is at https://api.budgetpixel.com/openapi.yaml. mcp.budgetpixel.com serves RFC 8414 + RFC 9728 OAuth
+  metadata for the product MCP server. No security.txt and no api-catalog on any host. The 404 bodies
+  on budgetpixel.com are the Next.js SPA shell (66KB of HTML) and on docs.budgetpixel.com are Mintlify
+  "Asset not found" -- neither is a document.
+hosts:
+- host: budgetpixel.com
+  documents:
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    file: well-known/budgetpixel-ai-plugin.json
+    content_type: application/json
+    note: OpenAI plugin manifest v1; auth type none; declares api.url https://budgetpixel.com/api/openapi.json
+      which returns 404 (SPA shell) -- a dead pointer in the provider own manifest
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+- host: api.budgetpixel.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+- host: docs.budgetpixel.com
+  documents:
+  - path: /.well-known/agent-card.json
+    status: 200
+    file: a2a/budgetpixel-agent-card.json
+    content_type: application/json
+    note: A2A agent card -- see a2a/budgetpixel-a2a.yml for the conformance grade
+  - path: /.well-known/agent-skills/budgetpixel/skill.md
+    status: 200
+    file: skills/budgetpixel-provider-published-skill.md
+    content_type: text/markdown
+    note: Provider-published Agent Skill, referenced by skills[0].url in the agent card
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+- host: mcp.budgetpixel.com
+  documents:
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: well-known/budgetpixel-oauth-authorization-server.json
+    content_type: application/json
+    note: RFC 8414 authorization server metadata; PKCE S256, dynamic client registration, scopes openid
+      + profile
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: well-known/budgetpixel-oauth-protected-resource.json
+    content_type: application/json
+    note: RFC 9728 protected resource metadata for the MCP endpoint
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null

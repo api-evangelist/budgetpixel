@@ -1,0 +1,126 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the BudgetPixel API
+  version: 1.0.0
+extends: ../openapi/budgetpixel-openapi.yaml
+x-provenance:
+  generated: '2026-08-28'
+  method: generated
+  source: >-
+    Derived from artifacts in this repo -- conventions/budgetpixel-conventions.yml,
+    errors/budgetpixel-problem-types.yml, rate-limits/budgetpixel-rate-limits.yml,
+    lifecycle/budgetpixel-lifecycle.yml, mcp/budgetpixel-tool-crosswalk.yml. Adds only
+    machine-readable restatements of facts BudgetPixel already publishes in prose; it never
+    invents contract behaviour and it never mutates the original spec.
+actions:
+  - target: $.info
+    description: Record the published maturity and the plan gate as structured extensions rather than prose.
+    update:
+      x-maturity: private-beta
+      x-plan-gate:
+        required_plans: [Premium, Pro, Ultra]
+        additional: private beta access required to mint an API key
+        source: https://docs.budgetpixel.com/introduction#availability
+      x-support-email: support@budgetpixel.com
+
+  - target: $.info
+    description: >-
+      Surface the rate-limit contract as data. The numbers and headers are stated in
+      info.description and at /concepts/rate-limits, but nothing in the spec is readable by a
+      client generator; the X-RateLimit trio was also observed live on a 401.
+    update:
+      x-rate-limits:
+        headers: [X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After]
+        exhaustion_status: 429
+        reset_semantics: seconds-until-window-reset
+        buckets:
+          - scope: per-api-key
+            limit: 600
+            window: 60s
+          - scope: per-source-ip
+            limit: 1200
+            window: 60s
+          - scope: per-account
+            limit: 60
+            window: 60s
+            applies_to: uploadMedia
+        source: https://docs.budgetpixel.com/concepts/rate-limits
+
+  - target: $.info
+    description: >-
+      Record the reversibility posture. The API has 49 charged write operations and no DELETE
+      verb anywhere -- no cancel, refund, void or undo. This is the fact an agent most needs
+      before it acts, and it is currently only inferable from the absence of endpoints.
+    update:
+      x-reversibility:
+        grade: absent
+        reversal_operations: []
+        window: null
+        note: >-
+          No submitted job can be cancelled and no successful generation can be refunded.
+          Public social posts (createPost) have no API delete. The only mitigation is
+          preventative: quote with estimateCost before committing.
+      x-idempotency:
+        supported: false
+        note: >-
+          No idempotency key. Combined with x-reversibility, an ambiguous timeout on a
+          generation POST is unsafe to retry -- it may create a second charged job that
+          cannot be undone, and REST publishes no history endpoint to check first.
+
+  - target: $.info
+    description: Point at the machine-readable agent surfaces the provider serves off-spec.
+    update:
+      x-agent-surfaces:
+        mcp_server: https://mcp.budgetpixel.com/mcp
+        mcp_transport: streamable-http
+        mcp_auth: OAuth 2.1 + PKCE (S256), Google SSO
+        agent_card: https://docs.budgetpixel.com/.well-known/agent-card.json
+        agent_skill: https://docs.budgetpixel.com/.well-known/agent-skills/budgetpixel/skill.md
+        llms_txt: https://docs.budgetpixel.com/llms.txt
+        crosswalk: ../mcp/budgetpixel-tool-crosswalk.yml
+
+  - target: $.components.schemas.Error
+    description: Name the error envelope standard explicitly so clients stop guessing at RFC 9457.
+    update:
+      x-error-format: vendor-json
+      x-rfc9457: false
+      x-envelope-warning: >-
+        Content-moderation blocks return a DIFFERENT, flatter shape on the same 400 status,
+        where `error` is a bare string rather than this object. See ModerationBlocked.
+
+  - target: $.components.schemas.ModerationBlocked
+    description: Flag the divergent envelope on the schema itself.
+    update:
+      x-alternate-envelope: true
+      x-retryable: true
+      x-retry-guidance: >-
+        Retryable after changing the prompt or input media. Not an auth, quota or account
+        failure -- branch on restriction_reason, which is stable.
+
+  - target: $.paths['/cost'].post
+    description: Mark the cost endpoint as the dry-run affordance for the whole API.
+    update:
+      x-dry-run: true
+      x-agent-guidance: >-
+        Call this before any generation. It is computed by the same code that bills, so it
+        never disagrees with the charge. exact:false means the returned credits are a ceiling.
+
+  - target: $.paths['/posts'].post
+    description: Mark the one operation with a public, irreversible, third-party-visible consequence.
+    update:
+      x-consequence: public-irreversible
+      x-credits: 10
+      x-agent-guidance: >-
+        Publishes to a PUBLIC community feed and cannot be undone through the API. Require
+        explicit human confirmation before calling. A post later hidden by content review is
+        not refunded.
+
+  - target: $.paths['/uploads'].post
+    description: Record the dedicated upload cap and the input lifetime.
+    update:
+      x-rate-limit:
+        scope: per-account
+        limit: 60
+        window: 60s
+        reason: free and unmetered
+      x-output-ttl: ~24h

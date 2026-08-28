@@ -1,0 +1,19 @@
+generated: '2026-08-28'
+method: searched
+documents:
+- file: llms/budgetpixel-llms.txt
+  source: https://docs.budgetpixel.com/llms.txt
+  http_status: 200
+  bytes: 26586
+  scope: The developer API documentation index -- introduction, quickstart, authentication, concepts (async
+    jobs, pricing and credits, rate limits, models, media inputs), the MCP server page, and all 74 API
+    reference pages.
+- file: llms/budgetpixel-audio-library-llms.txt
+  source: https://budgetpixel.com/llms.txt
+  http_status: 200
+  bytes: 1183
+  scope: A SEPARATE, much smaller index covering the BudgetPixel Free Audio Library (royalty-free AI-generated
+    sound effects and background music), not the API. Recorded because the apex-host llms.txt is what
+    most crawlers will find first, and it does not describe the API at all.
+note: Both saved verbatim. No llms-full.txt is committed (gitignored -- verbatim docs dumps embed vendor
+  example tokens that trip GitHub push protection).

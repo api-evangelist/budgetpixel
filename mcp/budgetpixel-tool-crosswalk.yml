@@ -1,0 +1,209 @@
+generated: '2026-08-28'
+method: derived
+source: mcp/budgetpixel-mcp-tools-list.json (live tools/list) bound to openapi/budgetpixel-openapi.yaml
+  operationIds
+note: 'Both surfaces are live and BOTH schemas were read directly (the MCP tool list answers anonymously;
+  the OpenAPI is public), so every binding below is name-and-parameter verified rather than guessed. The
+  structural difference is real: MCP exposes ONE polymorphic tool per modality with a model parameter,
+  while REST exposes ONE ENDPOINT PER MODEL -- 49 generation operations against 4 generation tools. An
+  agent on MCP cannot reach a model the tool model enum omits; an agent on REST cannot reach the upscale_image/upscale_video
+  convenience routing without picking the model endpoint itself.'
+surfaces:
+  openapi:
+    file: openapi/budgetpixel-openapi.yaml
+    servers:
+    - https://api.budgetpixel.com/v1
+    operations: 74
+    gated: API key (bpx_live_*), Premium/Pro/Ultra plan, private beta
+  mcp:
+    url: https://mcp.budgetpixel.com/mcp
+    tools: 12
+    gated: OAuth 2.1 + Google SSO for tool CALLS; initialize and tools/list are anonymous
+  graphql:
+    url: null
+    note: No GraphQL surface -- POST /graphql returns 404 on api.budgetpixel.com and budgetpixel.com
+crosswalk:
+- tool: generate_image
+  category: image
+  rest:
+  - createImage_flux_2_pro
+  - createImage_flux_2_dev
+  - createImage_flux_2_klein
+  - createImage_flux_1_1_pro
+  - createImage_gpt_image_2
+  - createImage_nano_banana_pro
+  - createImage_nano_banana_2
+  - createImage_nano_banana_2_lite
+  - createImage_seedream_5_0_pro
+  - createImage_seedream_5_0_lite
+  - createImage_seedream_4_5
+  - createImage_qwen_image
+  - createImage_qwen_image_2_0
+  - createImage_qwen_image_2_0_pro
+  - createImage_qwen_image_3_0
+  - createImage_qwen_image_3_0_pro
+  - createImage_kling_v3
+  - createImage_kling_v3_omni
+  - createImage_grok_imagine_image
+  - createImage_grok_imagine_image_2
+  - createImage_p_image
+  - createImage_p_image_edit
+  - createImage_wan_2_7
+  - createImage_wan_2_7_pro
+  - createImage_z_image_turbo
+  binding: one-tool-to-many-operations
+  confidence: high
+  note: MCP model parameter selects which of the 25 per-model POST /v1/images/{model} endpoints runs.
+    input_images maps to each operation image/reference_images body field.
+- tool: generate_video
+  category: video
+  rest:
+  - createVideo_seedance_2_0
+  - createVideo_seedance_2_0_fast
+  - createVideo_seedance_2_0_mini
+  - createVideo_seedance_2_5
+  - createVideo_seedance_1_5_pro
+  - createVideo_kling_v3_0_pro
+  - createVideo_kling_v3_0_standard
+  - createVideo_kling_v3_0_4k
+  - createVideo_kling_3_0_turbo
+  - createVideo_kling_v2_6_pro
+  - createVideo_kling_v3_omni_video
+  - createVideo_wan_2_7_video
+  - createVideo_wan_3_0_video
+  - createVideo_wan_3_0_video_prime
+  - createVideo_minimax_h3
+  - createVideo_p_video
+  - createVideo_happyhorse_1_1
+  binding: one-tool-to-many-operations
+  confidence: high
+  note: The MCP tool description names SeeDance 2.0 and 2.0 Mini as the exposed set; REST publishes 17
+    video model endpoints. MCP is a SUBSET here.
+- tool: generate_music
+  category: music
+  rest:
+  - createAudio_music_3_0
+  - createAudio_music_2_6
+  - createAudio_lyria_3
+  - createAudio_mureka_v9
+  - createAudio_sonilo_music
+  binding: one-tool-to-many-operations
+  confidence: high
+  note: Tool documents Music 3.0 (default), Music 2.6, Lyria 3, Mureka V9 and Sonilo Music -- a 1:1 match
+    with the five REST music operations.
+- tool: generate_sound_effect
+  category: audio
+  rest:
+  - createAudio_sonilo_sfx
+  - createAudio_sonilo_video_sfx
+  binding: one-tool-to-many-operations
+  confidence: high
+  note: Text mode binds createAudio_sonilo_sfx; the video parameter binds createAudio_sonilo_video_sfx.
+- tool: upscale_image
+  category: media
+  rest:
+  - createUpscale_p_image_upscale
+  - createUpscale_clarity_upscaler
+  - getUpscaleJob
+  binding: one-tool-to-many-operations
+  confidence: high
+  note: model defaults to p-image-upscale; the tool also polls, so it folds in getUpscaleJob.
+- tool: upscale_video
+  category: media
+  rest:
+  - createVideoUpscale_topazlabs_video_upscale
+  - getVideoUpscaleJob
+  binding: one-tool-to-many-operations
+  confidence: high
+  note: job_id parameter makes this tool double as its own poller (getVideoUpscaleJob).
+- tool: check_generation_status
+  category: jobs
+  rest:
+  - getImage
+  - getVideo
+  - getAudio
+  - getUpscaleJob
+  - getVideoUpscaleJob
+  - getLipSyncJob
+  - getMotionControlJob
+  binding: one-tool-to-many-operations
+  confidence: high
+  note: The type parameter chooses which typed REST status endpoint the tool reads.
+- tool: get_credit_balance
+  category: account
+  rest:
+  - getCredits
+  binding: one-to-one
+  confidence: high
+- tool: list_models
+  category: catalog
+  rest:
+  - listModels
+  binding: one-to-one
+  confidence: high
+  note: The only MCP tool the provider documents as usable without signing in.
+- tool: upload_media
+  category: uploads
+  rest:
+  - uploadMedia
+  binding: one-to-one
+  confidence: high
+  note: Both return a short-lived (~24h) input URL.
+- tool: create_social_post
+  category: social
+  rest:
+  - createPost
+  binding: one-to-one
+  confidence: high
+  note: Both cost 10 credits; MCP-created posts carry a "via MCP" label, REST-created ones "via API".
+- tool: get_generation_history
+  category: account
+  rest: []
+  binding: mcp-only
+  confidence: high
+  note: No REST list/history operation exists -- REST callers must retain their own job ids.
+mcp_only:
+- tool: get_generation_history
+  reason: The REST API publishes no history or list endpoint; the 74 operations are create + get-by-id
+    only. An API caller who loses a job id cannot recover it.
+rest_only:
+- operations:
+  - estimateCost
+  reason: POST /v1/cost has no MCP tool. Agents are told to price via list_models instead, which cannot
+    resolve parameter-dependent pricing (flux-2-pro by megapixels, grok-imagine-image-2 by quality x size,
+    seedream-5.0-pro per reference image, per-second video reference-input billing).
+- operations:
+  - moderateNSFW
+  - moderateCSAM
+  - classifyMusicGenre
+  reason: The moderation and classification surface is REST-only -- no MCP tool exposes standalone content
+    rating, CSAM screening, or music-genre classification.
+- operations:
+  - convertImage
+  - convertVideo
+  - convertAudio
+  reason: Format conversion (2/10/3 credits) is REST-only.
+- operations:
+  - createLipSync_omni_human_1_5
+  - createLipSync_p_video_avatar
+  - getLipSyncJob
+  reason: Lip sync is REST-only -- no MCP tool.
+- operations:
+  - createMotion_dreamactor_m2_0
+  - createMotion_kling_3_motion_control_std
+  - getMotionControlJob
+  reason: Motion control is REST-only -- no MCP tool.
+- operations:
+  - most of the 17 video model endpoints
+  reason: generate_video documents only the SeeDance 2.0 family; Kling, Wan, MiniMax, Pruna and HappyHorse
+    video models are reachable over REST only.
+coverage:
+  mcp_tools: 12
+  mcp_tools_bound_to_rest: 11
+  mcp_only_tools: 1
+  rest_operations: 74
+  rest_operations_reachable_via_mcp: 45
+  rest_only_operations: 29
+  note: reachable_via_mcp counts the per-model generation operations a polymorphic MCP tool can select
+    plus the status/account/upload/social operations it wraps; the video count is generous because the
+    tool model enum was not enumerated from the live schema.

@@ -1,0 +1,229 @@
+generated: '2026-08-28'
+method: probed
+source: https://mcp.budgetpixel.com/mcp -- JSON-RPC initialize + tools/list, answered anonymously 2026-08-28
+name: BudgetPixel MCP Server
+summary: First-party remote MCP server that lets an agent generate images, video, music and sound effects
+  on the signed-in user BudgetPixel account, upscale media, upload inputs, read the model catalogue and
+  credit balance, and publish to the community feed.
+deployment:
+  mode: remote
+  endpoint: https://mcp.budgetpixel.com/mcp
+  auth: oauth
+  verified: probed
+  note: Remote only. The two first-party GitHub repos (budgetpixel-ai/budgetpixel-mcp, budgetpixel-ai/cursor-plugin)
+    ship configuration and a Cursor plugin manifest that point at this same hosted URL -- neither publishes
+    an npx/pip stdio server, so mode is remote, not both. Verified by an anonymous initialize + tools/list
+    handshake that returned 12 tools with full inputSchemas.
+transport: streamable-http
+protocol_version: '2025-06-18'
+server_info:
+  name: budgetpixel
+  version: 0.1.0
+capabilities:
+  tools: true
+  resources: true
+  prompts: false
+authorization:
+  model: OAuth 2.1 authorization code + PKCE (S256) with dynamic client registration; end user signs in
+    with Google SSO
+  authorization_server: https://mcp.budgetpixel.com
+  authorization_endpoint: https://mcp.budgetpixel.com/oauth/authorize
+  token_endpoint: https://mcp.budgetpixel.com/oauth/token
+  registration_endpoint: https://mcp.budgetpixel.com/oauth/register
+  scopes_supported:
+  - openid
+  - profile
+  metadata:
+  - well-known/budgetpixel-oauth-authorization-server.json
+  - well-known/budgetpixel-oauth-protected-resource.json
+  anonymous_surface: initialize and tools/list answer without a token; tool CALLS require the OAuth session,
+    and generation/upload/posting additionally require a Premium, Pro or Ultra plan
+tool_count: 12
+tools:
+- name: generate_image
+  description: Use this to create or edit an AI image
+  input_parameters:
+  - aspect_ratio
+  - input_images
+  - model
+  - negative_prompt
+  - num_images
+  - prompt
+  - quality
+  - resolution
+  - seed
+  required:
+  - prompt
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+- name: generate_video
+  description: Use this to create or edit an AI video
+  input_parameters:
+  - aspect_ratio
+  - audio
+  - duration_seconds
+  - end_image
+  - generate_audio
+  - image
+  - model
+  - negative_prompt
+  - prompt
+  - reference_audios
+  - reference_images
+  - reference_videos
+  - resolution
+  - video
+  required:
+  - prompt
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+- name: generate_music
+  description: Use this to create an AI music track (full songs with vocals, or instrumentals)
+  input_parameters:
+  - duration
+  - format
+  - images
+  - instrumental
+  - lyrics
+  - lyrics_optimizer
+  - model
+  - prompt
+  - vocal_gender
+  required: []
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+- name: generate_sound_effect
+  description: Use this to create sound effects (NOT music)
+  input_parameters:
+  - duration
+  - format
+  - model
+  - prompt
+  - video
+  required: []
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+- name: upscale_image
+  description: Use this to upscale an image to a higher resolution
+  input_parameters:
+  - creativity
+  - enhance_details
+  - enhance_realism
+  - image
+  - model
+  - prompt
+  - target
+  required:
+  - image
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+- name: upscale_video
+  description: Use this to upscale a video to 1080p or 4K (30 or 60 fps) with Topaz Labs professional-grade
+    AI
+  input_parameters:
+  - job_id
+  - target_fps
+  - target_resolution
+  - video
+  required: []
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+- name: check_generation_status
+  description: Use this after calling generate_image, generate_video, generate_music, or generate_sound_effect
+    to poll for results
+  input_parameters:
+  - job_id
+  - type
+  required: []
+  annotations:
+    readOnlyHint: true
+    openWorldHint: false
+    destructiveHint: false
+- name: get_credit_balance
+  description: Use this when the user asks about their remaining credits, subscription plan, or usage
+  input_parameters: []
+  required: []
+  annotations:
+    readOnlyHint: true
+    openWorldHint: false
+    destructiveHint: false
+- name: list_models
+  description: List the AI image, video, music, and sound-effect models available on BudgetPixel with
+    base credit prices and capabilities
+  input_parameters: []
+  required: []
+  annotations:
+    readOnlyHint: true
+    openWorldHint: false
+    destructiveHint: false
+- name: get_generation_history
+  description: Get the user's recent generation history from BudgetPixel — images by default, or pass
+    type "video", "music", or "sound_effect"
+  input_parameters:
+  - limit
+  - offset
+  - type
+  required: []
+  annotations:
+    readOnlyHint: true
+    openWorldHint: false
+    destructiveHint: false
+- name: upload_media
+  description: 'Upload a local image, video, or audio file to BudgetPixel and get back a short-lived URL
+    (valid ~24h) to use as a generation input: pass it as an input_images value on generate_image, or
+    as image / end_image / reference_'
+  input_parameters:
+  - file
+  required:
+  - file
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+- name: create_social_post
+  description: Publish a post to the user's PUBLIC BudgetPixel community feed — visible to everyone and
+    labeled "via MCP"
+  input_parameters:
+  - content
+  - cover_image
+  - genre
+  - lyrics
+  - media
+  - song_name
+  required:
+  - media
+  annotations:
+    readOnlyHint: false
+    openWorldHint: false
+    destructiveHint: false
+raw_tools_list: mcp/budgetpixel-mcp-tools-list.json
+related_servers:
+- name: BudgetPixel Docs Search MCP
+  endpoint: https://docs.budgetpixel.com/mcp
+  operator: Mintlify (documentation platform), on the provider own docs host
+  auth: none
+  verified: probed
+  tools:
+  - search_budget_pixel_api
+  - query_docs_filesystem_budget_pixel_api
+  note: Read-only documentation search over the BudgetPixel docs. Answered tools/list anonymously 2026-08-28.
+    This is a docs-search server, NOT the generation API.
+- name: Mintlify preview host duplicate
+  endpoint: https://budgetpixel.main-kill-isr.mintlify.me/mcp
+  status: live but not a first-party host
+  note: A mintlify.me preview deployment serving the same docs-search tools as docs.budgetpixel.com/mcp.
+    Recorded for provenance; removed as an apis.yml pointer because it is a platform preview URL, not
+    a BudgetPixel-controlled surface.
+docs: https://docs.budgetpixel.com/mcp-server

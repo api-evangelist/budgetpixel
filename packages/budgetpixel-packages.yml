@@ -1,0 +1,79 @@
+generated: '2026-08-28'
+method: searched
+source: registry.npmjs.org, pypi.org, api.github.com/orgs/budgetpixel-ai, https://docs.budgetpixel.com
+summary: BudgetPixel publishes NO client SDK on any package registry. Every registry probed returned 404
+  or an empty result. The two first-party GitHub repositories are MCP configuration and a Cursor plugin,
+  not client libraries -- neither is a package a developer installs to call the REST API.
+official_sdk_count: 0
+registries_probed:
+- registry: npm
+  queries:
+  - budgetpixel
+  - '@budgetpixel/sdk'
+  - '@budgetpixel/mcp'
+  - budgetpixel-mcp
+  - budgetpixel-sdk
+  - full-text search "budgetpixel"
+  result: '404 on every named package; registry search returned total: 0'
+  checked: '2026-08-28'
+- registry: pypi
+  queries:
+  - budgetpixel
+  - budgetpixel-sdk
+  result: '404'
+  checked: '2026-08-28'
+- registry: github
+  queries:
+  - org budgetpixel-ai
+  - code search budgetpixel
+  result: org exists with 2 public repos; neither is a client library
+  checked: '2026-08-28'
+packages:
+- name: budgetpixel-ai/budgetpixel-mcp
+  official: true
+  kind: mcp-configuration
+  registry: github
+  url: https://github.com/budgetpixel-ai/budgetpixel-mcp
+  license: MIT
+  version: null
+  published: null
+  last_pushed: '2026-08-27'
+  stars: 1
+  contents:
+  - README.md
+  - server.json
+  - LICENSE
+  - assets
+  note: 'version: null because this repo is NOT published to any registry and carries no release or tag
+    -- there is no metadata endpoint to read. It documents the REMOTE endpoint https://mcp.budgetpixel.com/mcp
+    and ships an MCP server.json manifest; it does not ship an installable stdio server, so it does not
+    make the MCP deployment mode `both`.'
+- name: budgetpixel-ai/cursor-plugin
+  official: true
+  kind: editor-plugin
+  registry: github
+  url: https://github.com/budgetpixel-ai/cursor-plugin
+  license: MIT
+  version: null
+  published: null
+  last_pushed: '2026-08-27'
+  stars: 3
+  contents:
+  - .cursor-plugin
+  - mcp.json
+  - commands
+  - README.md
+  - LICENSE
+  - assets
+  note: 'version: null -- distributed through the Cursor plugin mechanism (/add-plugin budgetpixel), not
+    a package registry, so there is no version metadata to read. It is a thin wrapper: mcp.json points
+    at the same hosted remote MCP URL.'
+client_guidance: With no SDK on any registry, every REST integration is hand-rolled against openapi/budgetpixel-openapi.yaml.
+  The spec is clean enough to generate a client from (3.1.0, 74 unique operationIds, all operations tagged
+  and summarised), which is the practical substitute. Agents should prefer the MCP server, which needs
+  no client at all.
+age_signal:
+  org_created: '2026-08-27'
+  note: The GitHub organisation itself was created on 2026-08-27 -- one day before this probe. The absence
+    of SDKs is consistent with an API in private beta rather than with abandonment; there is no decay
+    signal here, only a very young surface.

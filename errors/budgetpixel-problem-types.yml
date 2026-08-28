@@ -1,0 +1,126 @@
+generated: '2026-08-28'
+method: searched
+source: https://docs.budgetpixel.com/concepts/async-jobs#errors and https://docs.budgetpixel.com/authentication
+derived_from: openapi/budgetpixel-openapi.yaml components.responses + components.schemas.Error/ModerationBlocked
+format: vendor-json
+rfc9457: false
+format_note: NOT RFC 9457. The API uses a nested vendor envelope {"error":{"type","code","message"}} served
+  as application/json -- no application/problem+json media type, no type URI, no instance. Content-moderation
+  blocks use a SECOND, FLATTER shape on the same 400 status, so a client must branch on body shape, not
+  just status code.
+envelope:
+  primary:
+    error:
+      type: string -- error category
+      code: string -- stable machine-readable code
+      message: string -- human readable
+  required:
+  - error.type
+  - error.code
+  - error.message
+  moderation:
+    error: string -- human-readable explanation (a STRING here, not an object)
+    restriction_reason: string enum -- stable machine-readable block reason
+  warning: 'The two envelopes disagree on the TYPE of the `error` key: an object in the standard envelope,
+    a bare string in a moderation block. Code that does response.error.code will read undefined on a moderation
+    400.'
+status_coverage:
+  '200': 73
+  '201': 1
+  '400': 65
+  '401': 74
+  '402': 7
+  '403': 69
+  '404': 8
+  '409': 1
+  '413': 1
+  '415': 1
+  '429': 65
+  note: Counts of operations declaring each status across the 74 published operations. 401 is declared
+    on every operation.
+problem_types:
+- status: 400
+  type: invalid_request_error
+  code: model_not_available
+  title: Requested model is not available via the API
+  remediation: Call GET /v1/models (listModels) and use a name from the live catalogue.
+- status: 400
+  type: invalid_request_error
+  code: (various)
+  title: Malformed request body or parameters
+  remediation: Validate the body against the per-model operation schema in openapi/budgetpixel-openapi.yaml.
+- status: 400
+  type: moderation_block
+  code: see restriction_reason
+  title: Input blocked by content moderation
+  envelope: moderation
+  remediation: The block is a property of the PROMPT or INPUT MEDIA, not the account or the key. Reword
+    the prompt or change the input and retry -- do not treat this as an auth or quota failure.
+- status: 401
+  type: authentication_error
+  code: missing_api_key
+  title: No Authorization header
+  remediation: 'Send Authorization: Bearer bpx_live_...'
+  probed: Confirmed live on GET https://api.budgetpixel.com/v1/models with no auth, 2026-08-28.
+- status: 401
+  type: authentication_error
+  code: invalid_api_key
+  title: Key is unknown or revoked
+  remediation: Revocation takes effect immediately; mint a new key from the account dashboard.
+- status: 402
+  type: billing_error
+  code: (insufficient credits)
+  title: Insufficient credit balance
+  remediation: A request that would exceed total_available is rejected BEFORE the job is created. Check
+    GET /v1/account/credits and quote with POST /v1/cost first. Declared on 7 operations.
+- status: 403
+  type: permission_error
+  code: api_access_not_enabled
+  title: Account plan cannot use the API
+  remediation: The developer API requires Premium, Pro or Ultra AND private-beta access.
+- status: 403
+  type: permission_error
+  code: account_banned
+  title: Account is banned
+  remediation: Contact support@budgetpixel.com. Not retryable.
+- status: 404
+  type: invalid_request_error
+  code: (job not found)
+  title: Job not found, or not yours
+  remediation: Job ids are opaque and scoped to the owning account; poll each id at its own type status
+    endpoint.
+- status: 429
+  type: rate_limit_error
+  code: rate_limited
+  title: Rate or queue limit reached
+  remediation: Sleep the full Retry-After. Rejected requests still count against the window. See rate-limits/budgetpixel-rate-limits.yml.
+- status: 413
+  type: invalid_request_error
+  code: (payload too large)
+  title: Upload exceeds the size limit
+  remediation: MCP documents a 50 MB ceiling on upload_media. Declared on the uploads operation.
+- status: 415
+  type: invalid_request_error
+  code: (unsupported media type)
+  title: Unsupported upload content type
+  remediation: Declared on the uploads operation.
+- status: 409
+  type: conflict
+  code: (conflict)
+  title: Conflict
+  remediation: Declared on a single operation in the spec without a documented code.
+moderation_restriction_reasons:
+- code: input_explicit_adult
+  meaning: Prompt or input media describes sexually explicit content
+- code: input_upload_nudity
+  meaning: An uploaded photo contains nudity
+- code: input_celebrity_likeness
+  meaning: Input photo appears to depict a real public figure
+- code: strict_model_nsfw
+  meaning: Prompt contains explicit terms this model upstream provider prohibits
+- code: input_csam
+  meaning: Prompt appears to sexualize minors
+agent_note: 'The single most important branch for an autonomous caller is 400-with-restriction_reason
+  vs 400-without: the first is retryable after rewording, the second is a client bug. A 402 is a hard
+  stop until credits are topped up, and a 403 api_access_not_enabled is a hard stop until the plan changes
+  -- neither should be retried.'

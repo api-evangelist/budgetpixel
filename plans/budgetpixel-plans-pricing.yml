@@ -1,0 +1,165 @@
+generated: '2026-08-28'
+method: searched
+source: https://budgetpixel.com/pricing
+model: Credit-based. Every plan grants a monthly credit allowance; generations debit credits at each model
+  published price. Subscription is optional -- one-off credit packs are also sold. Annual billing discounts
+  17-30% by tier.
+currency: USD
+plan_count: 6
+api_access_note: The developer API and the MCP server are gated to the Premium, Pro and Ultra tiers. Free,
+  Starter and Basic accounts can connect to the MCP server and call list_models, but every generation
+  tool returns an upgrade notice. The developer API is additionally in private beta.
+plans:
+- name: Free
+  positioning: Get a taste of generative AI
+  price_monthly: 0
+  price_annual: 0
+  billing_period: month
+  included_quota:
+    credits_per_month: 300
+    approx_images: 24
+    approx_videos: 12
+  limits:
+    api_access: false
+    mcp_generation: false
+    lora_training: false
+  features:
+  - Text-to-image
+  - Image-to-image editing
+  - Upscaling and background removal
+  - Text-to-video
+  - Image-to-video
+  - Lip sync and sound effects
+- name: Starter
+  positioning: Hobbyist Creator
+  price_monthly: 5
+  price_annual: 50
+  price_monthly_when_annual: 4.17
+  annual_discount_pct: 17
+  billing_period: month
+  included_quota:
+    credits_per_month: 5000
+    approx_images: 200
+    approx_videos: 100
+  limits:
+    storage_gb: 10
+    community_search_results: 10
+    concurrent_video_audio_jobs: 2
+    api_access: false
+  features:
+  - Everything in Free
+  - Train your own LoRA models
+  - Enhanced image models
+- name: Basic
+  positioning: Designer
+  price_monthly: 10
+  price_annual: 100
+  price_monthly_when_annual: 8.33
+  annual_discount_pct: 17
+  billing_period: month
+  included_quota:
+    credits_per_month: 11000
+    approx_images: 440
+    approx_videos: 220
+  limits:
+    storage_gb: 20
+    community_search_results: 30
+    concurrent_video_jobs: 3
+    api_access: false
+  features:
+  - Everything in Starter
+  - Access to high-end video generation models
+- name: Premium
+  positioning: Content Creator (Most Popular)
+  price_monthly: 22
+  price_annual: 200
+  price_monthly_when_annual: 16.67
+  annual_discount_pct: 24
+  billing_period: month
+  included_quota:
+    credits_per_month: 25000
+    approx_images: 600
+    approx_videos: 500
+  limits:
+    storage_gb: 40
+    community_search_results: 50
+    concurrent_video_audio_jobs: 5
+    api_access: true
+    mcp_generation: true
+  features:
+  - Everything in Basic
+  - Commercial usage
+  - Developer API + MCP access
+- name: Pro
+  positioning: Professional Creator
+  price_monthly: 55
+  price_annual: 495
+  price_monthly_when_annual: 41.25
+  annual_discount_pct: 25
+  billing_period: month
+  included_quota:
+    credits_per_month: 60000
+    approx_images: 2400
+    approx_videos: 1200
+    daily_free_models_allowance: 100
+  limits:
+    storage_gb: 50
+    community_search_results: 50
+    concurrent_video_audio_jobs: 7
+    api_access: true
+    mcp_generation: true
+  features:
+  - Everything in Premium
+  - 5% bonus on all credit purchases
+  - Priority queue processing
+  - Daily free-models pool (100/day) across qualified image models, applies to API calls too
+- name: Ultra
+  positioning: Enterprise (Best Value)
+  price_monthly: 125
+  price_annual: 1050
+  price_monthly_when_annual: 87.5
+  annual_discount_pct: 30
+  billing_period: month
+  included_quota:
+    credits_per_month: 130000
+    approx_images: 5200
+    approx_videos: 2600
+    daily_free_models_allowance: 300
+  limits:
+    storage_gb: 60
+    community_search_results: 50
+    concurrent_video_audio_jobs: 10
+    api_access: true
+    mcp_generation: true
+  features:
+  - Everything in Pro
+  - 10% bonus on all credit purchases
+  - Highest priority queue processing
+  - Daily free-models pool (300/day)
+overage:
+  model: Credit packs (pay-as-you-go). No required subscription; packs can be bought at any time and Pro/Ultra
+    add a 5%/10% purchase bonus. A request that would exceed the available balance is REJECTED before
+    the job is created rather than overdrafting.
+  source: https://docs.budgetpixel.com/concepts/pricing-and-credits
+metering:
+  unit: credit
+  charged_on: job success only -- failed, timed-out, and pre-generation-rejected requests are never charged
+  images: per output image (credits_per_generation); a 3-image result costs 3x
+  video: per second, and for several models per second BY RESOLUTION; some models also bill reference-VIDEO
+    input seconds (seedance-2.x at half the output rate, wan-2.7-video at the full rate)
+  music: flat per track (Music 3.0/2.6 = 200, Lyria 3 = 100, Mureka V9 = 60) except sonilo-music, which
+    is 4 credits/s with a 10 s minimum
+  sound_effects: per second with a 3 s minimum -- sonilo-sfx 5 credits/s from text, sonilo-video-sfx 15
+    credits/s of measured input video
+  utility:
+    convert-image: 2
+    convert-video: 10
+    convert-audio: 3
+    create-post: 10
+  quote_endpoint: POST /v1/cost (operationId estimateCost) returns the exact charge for the exact body,
+    computed by the same code that bills
+  source: https://docs.budgetpixel.com/concepts/pricing-and-credits
+promotions:
+  note: 'Time-boxed per-model discounts run on Premium/Pro/Ultra and apply automatically at generation;
+    POST /v1/cost quotes the discounted price. Observed live 2026-08-28: Wan 3.0 video 30% off, ending
+    Aug 31.'

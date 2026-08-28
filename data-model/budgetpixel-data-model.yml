@@ -1,0 +1,286 @@
+generated: '2026-08-28'
+method: derived
+source: openapi/budgetpixel-openapi.yaml components.schemas ($ref graph + id-reference fields)
+summary: 'A deliberately flat model. There are 21 component schemas and essentially ONE domain concept
+  repeated per modality: a Job. Jobs do not reference each other, there is no customer/project/workspace
+  entity, and there are no foreign keys between resources -- media flows between operations as URL STRINGS,
+  not as typed references. That is the defining shape of this API and it is why there is no ERD worth
+  drawing beyond the job families.'
+entity_count: 21
+entities:
+- name: ImageJob
+  kind: job
+  id_field: id
+  id_shape: opaque string, e.g. img_a1b2c3d4e5f6
+  status_field: status ($ref JobStatus)
+  fields:
+  - id
+  - model
+  - status
+  - images[]
+  - created_at
+  - error
+  polled_at: GET /v1/images/{job_id} (getImage)
+- name: VideoJob
+  kind: job
+  id_field: id
+  id_shape: opaque string (uuid over MCP)
+  status_field: status ($ref JobStatus)
+  fields:
+  - id
+  - model
+  - status
+  - video_url
+  - aspect_ratio
+  - length_seconds
+  - created_at
+  - started_at
+  - updated_at
+  - completed_at
+  - error_message
+  polled_at: GET /v1/videos/{job_id} (getVideo)
+  note: The richest job schema -- the only one carrying started_at/updated_at, which matters because video
+    jobs run for minutes.
+- name: AudioJob
+  kind: job
+  id_field: id
+  id_shape: numeric over MCP
+  status_field: status ($ref JobStatus)
+  fields:
+  - id
+  - model
+  - status
+  - audio_url
+  - video_url
+  - created_at
+  - error
+  polled_at: GET /v1/audios/{job_id} (getAudio)
+  note: Carries BOTH audio_url and video_url because sonilo-video-sfx returns the effects track and the
+    input video with effects mixed in.
+- name: UpscaleJob
+  kind: job
+  id_field: id
+  status_field: status (plain string, NOT the JobStatus enum)
+  fields:
+  - id
+  - model
+  - status
+  - image_url
+  - created_at
+  - completed_at
+  - error_message
+  polled_at: GET /v1/upscales/{id} (getUpscaleJob)
+- name: LipSyncJob
+  kind: job
+  id_field: id
+  status_field: status (plain string, NOT the JobStatus enum)
+  fields:
+  - id
+  - model
+  - status
+  - video_url
+  - created_at
+  - completed_at
+  - error_message
+  polled_at: GET /v1/lip-sync/{id} (getLipSyncJob)
+- name: MotionJob
+  kind: job
+  id_field: id
+  status_field: status (plain string, NOT the JobStatus enum)
+  fields:
+  - id
+  - model
+  - status
+  - video_url
+  - created_at
+  - completed_at
+  - error_message
+  polled_at: GET /v1/motion-control/{id} (getMotionControlJob)
+- name: JobStatus
+  kind: enum
+  values:
+  - pending
+  - starting
+  - processing
+  - completing
+  - succeeded
+  - failed
+  - timeout
+  terminal:
+  - succeeded
+  - failed
+  - timeout
+- name: ImageOutput
+  kind: value-object
+  fields:
+  - position
+  - url
+  owned_by: ImageJob.images[]
+- name: Model
+  kind: catalogue
+  id_field: name
+  fields:
+  - name
+  - type
+  - credits_per_generation
+  - credits_per_unit
+  - unit_type
+  - min_billable_seconds
+  - resolution_pricing
+  read_at: GET /v1/models (listModels)
+  note: The pricing source of truth at runtime. `name` is also the URL PATH SEGMENT of every generation
+    endpoint (/v1/images/{name}), which is the one real join in the model.
+- name: CostEstimate
+  kind: value-object
+  fields:
+  - model
+  - type
+  - credits
+  - exact
+  produced_by: POST /v1/cost (estimateCost)
+- name: CreditBalance
+  kind: account
+  fields:
+  - total_available
+  - monthly_remaining
+  - monthly_limit
+  - monthly_used
+  - extra_credits
+  read_at: GET /v1/account/credits (getCredits)
+- name: UploadResponse
+  kind: value-object
+  fields:
+  - url
+  - content_type
+  - bytes
+  - expires_in
+  produced_by: POST /v1/uploads (uploadMedia)
+  note: expires_in is roughly 24 hours. This is the ONLY entity with a lifetime, and it is what binds
+    an uploaded input to a later generation call.
+- name: ConvertResponse
+  kind: value-object
+  fields:
+  - url
+  - filename
+  - content_type
+  - size_bytes
+  - credits_charged
+  - retention
+  produced_by: POST /v1/convert/{image|video|audio}
+- name: CreatePostResponse
+  kind: social
+  id_field: id
+  id_shape: integer
+  fields:
+  - id
+  - url
+  - media_type
+  - moderation
+  - credits_charged
+  produced_by: POST /v1/posts (createPost)
+- name: CreateImageResponse
+  kind: acknowledgement
+  fields:
+  - id
+  - model
+  - status
+  - message
+- name: CreateVideoResponse
+  kind: acknowledgement
+- name: CreateAudioResponse
+  kind: acknowledgement
+- name: CreateUpscaleResponse
+  kind: acknowledgement
+- name: CreateMotionResponse
+  kind: acknowledgement
+- name: Error
+  kind: error
+  fields:
+  - error.type
+  - error.code
+  - error.message
+- name: ModerationBlocked
+  kind: error
+  fields:
+  - error
+  - restriction_reason
+  note: A SECOND error shape on the same 400 status -- see errors/budgetpixel-problem-types.yml.
+relationships:
+- from: ImageJob
+  to: ImageOutput
+  type: has_many
+  via: images[]
+  note: The only true $ref containment relationship in the model.
+- from: ImageJob
+  to: JobStatus
+  type: has_one
+  via: status
+- from: VideoJob
+  to: JobStatus
+  type: has_one
+  via: status
+- from: AudioJob
+  to: JobStatus
+  type: has_one
+  via: status
+- from: ImageJob
+  to: Model
+  type: belongs_to
+  via: model (string name)
+  binding: soft
+  note: A NAME string, not a $ref or an id -- resolvable only against GET /v1/models.
+- from: VideoJob
+  to: Model
+  type: belongs_to
+  via: model (string name)
+  binding: soft
+- from: AudioJob
+  to: Model
+  type: belongs_to
+  via: model (string name)
+  binding: soft
+- from: UpscaleJob
+  to: Model
+  type: belongs_to
+  via: model (string name)
+  binding: soft
+- from: UploadResponse
+  to: ImageJob
+  type: feeds
+  via: url passed into input_images/image/reference_images
+  binding: soft
+  note: A URL STRING, not a typed reference. Nothing in the schema records which upload produced which
+    job.
+- from: UploadResponse
+  to: VideoJob
+  type: feeds
+  via: url passed into image/video/reference_videos
+  binding: soft
+- from: ImageJob
+  to: CreatePostResponse
+  type: feeds
+  via: output url passed as post media
+  binding: soft
+- from: AudioJob
+  to: CreatePostResponse
+  type: feeds
+  via: audio_url passed as post media
+  binding: soft
+- from: CostEstimate
+  to: Model
+  type: belongs_to
+  via: model (string name)
+  binding: soft
+id_prefixes:
+- entity: ImageJob
+  example: img_a1b2c3d4e5f6
+  source: https://docs.budgetpixel.com/concepts/async-jobs
+gaps:
+- No customer, account, project, workspace or team entity is exposed. The account is implicit in the API
+  key.
+- No job LIST or history resource over REST -- a caller that loses a job id cannot recover it. Only the
+  MCP get_generation_history tool can.
+- Three job families (UpscaleJob, LipSyncJob, MotionJob) type `status` as a plain string instead of reusing
+  the JobStatus enum, so a generic client cannot validate their states against the documented lifecycle.
+- Media crosses operation boundaries as URLs with no provenance field, so lineage (which upload, which
+  job, which post) is not recoverable from the API.
