@@ -1,0 +1,1088 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Alibaba API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Alibaba across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- name: Alibaba
+paths:
+  /images/qwen-image:
+    post:
+      description: 'Alibaba Qwen-Image — best-in-class complex text rendering and typography. Text-to-image with seed control.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_qwen_image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '21:9'
+                  - '9:21'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Qwen-Image
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/qwen-image-2.0:
+    post:
+      description: 'Alibaba Qwen Image 2.0 — fast unified generation and editing with strong text rendering and multi-image fusion from up to 3 reference images.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_qwen_image_2_0
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  - match_input_image
+                  type: string
+                negative_prompt:
+                  description: What to avoid in the generated image.
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 3) for image editing and multi-image fusion. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Use aspect_ratio "match_input_image" to keep the input's aspect ratio.
+                  items:
+                    type: string
+                  maxItems: 3
+                  type: array
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+                size:
+                  default: 1.5K
+                  description: Output resolution tier.
+                  enum:
+                  - 1K
+                  - 1.5K
+                  - 2K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Qwen Image 2.0
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/qwen-image-2.0-pro:
+    post:
+      description: 'Alibaba Qwen Image 2.0 Pro — premium generation with enhanced text rendering, fine-grained realism, and stronger semantic adherence. Multi-image fusion from up to 3 reference images.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_qwen_image_2_0_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  - match_input_image
+                  type: string
+                negative_prompt:
+                  description: What to avoid in the generated image.
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 3) for image editing and multi-image fusion. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Use aspect_ratio "match_input_image" to keep the input's aspect ratio.
+                  items:
+                    type: string
+                  maxItems: 3
+                  type: array
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+                size:
+                  default: 1.5K
+                  description: Output resolution tier.
+                  enum:
+                  - 1K
+                  - 1.5K
+                  - 2K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Qwen Image 2.0 Pro
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/qwen-image-3.0:
+    post:
+      description: 'Alibaba Qwen Image 3.0 — unified generation and editing balancing quality and speed, with multi-image fusion from up to 3 reference images. Billing: 40 credits per image at 1K, 45 at 2K.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_qwen_image_3_0
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  - match_input_image
+                  type: string
+                negative_prompt:
+                  description: What to avoid in the generated image.
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 3) for image editing and multi-image fusion. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Use aspect_ratio "match_input_image" to keep the input's aspect ratio.
+                  items:
+                    type: string
+                  maxItems: 3
+                  type: array
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+                size:
+                  default: 1K
+                  description: Output resolution tier. 1K bills 40 credits per image; 2K bills 45.
+                  enum:
+                  - 1K
+                  - 2K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Qwen Image 3.0
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/qwen-image-3.0-pro:
+    post:
+      description: 'Alibaba Qwen Image 3.0 Pro — professional infographics, exquisite photorealism, and stronger prompt adherence. Multi-image fusion from up to 3 reference images. Billing: 45 credits per image at 1K, 85 at 2K.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_qwen_image_3_0_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  - match_input_image
+                  type: string
+                negative_prompt:
+                  description: What to avoid in the generated image.
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 3) for image editing and multi-image fusion. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Use aspect_ratio "match_input_image" to keep the input's aspect ratio.
+                  items:
+                    type: string
+                  maxItems: 3
+                  type: array
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+                size:
+                  default: 1K
+                  description: Output resolution tier. 1K bills 45 credits per image; 2K bills 85.
+                  enum:
+                  - 1K
+                  - 2K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Qwen Image 3.0 Pro
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/wan-2.7:
+    post:
+      description: 'Alibaba Wan 2.7 — image generation and editing with thinking mode, multi-reference composition from up to 9 reference images, and up to 2K output.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_wan_2_7
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  - match_input_image
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Use aspect_ratio "match_input_image" to keep the input's aspect ratio.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+                size:
+                  default: 2K
+                  description: Output resolution tier.
+                  enum:
+                  - 1K
+                  - 2K
+                  type: string
+                thinking_mode:
+                  description: Enable the model's thinking mode for stronger prompt planning. Text-to-image only — ignored when reference images are provided.
+                  type: boolean
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Wan 2.7
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/wan-2.7-pro:
+    post:
+      description: 'Alibaba Wan 2.7 Pro — professional edition of Wan 2.7 with 4K output support, thinking mode, and multi-reference composition from up to 9 reference images.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_wan_2_7_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  - match_input_image
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Use aspect_ratio "match_input_image" to keep the input's aspect ratio.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+                size:
+                  default: 2K
+                  description: Output resolution tier. 4K applies to text-to-image only — with reference images the output falls back to 2K.
+                  enum:
+                  - 1K
+                  - 2K
+                  - 4K
+                  type: string
+                thinking_mode:
+                  description: Enable the model's thinking mode for stronger prompt planning. Text-to-image only — ignored when reference images are provided.
+                  type: boolean
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Wan 2.7 Pro
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/z-image-turbo:
+    post:
+      description: 'Tongyi-MAI Z-Image-Turbo — ultra-fast 6B-parameter text-to-image with only 9 inference steps. Supports negative prompt and seed control.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_z_image_turbo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  - '9:21'
+                  type: string
+                negative_prompt:
+                  description: What to avoid in the generated image.
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Z-Image-Turbo
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/happyhorse-1.1:
+    post:
+      description: 'Alibaba HappyHorse 1.1 — highly realistic dynamic rendering. Text-to-video; image-to-video (start frame only); and reference-images-to-video (up to 9 images for subject-consistent generation). 720p or 1080p, priced per resolution (see `resolution_pricing` in GET /v1/models); 4–15 seconds. Audio is determined by the model (no toggle). No video-edit mode.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_happyhorse_1_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when a start image already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  type: string
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with `reference_images`.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (4–15).
+                  maximum: 15
+                  minimum: 4
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                reference_images:
+                  description: Optional reference images (1–9) for subject-consistent reference-to-video. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image` (the start frame).
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 720p
+                  - 1080p
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with HappyHorse 1.1
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/wan-2.7-video:
+    post:
+      description: 'Alibaba Wan 2.7 (video) — text-to-video; image-to-video with a start frame and an optional end frame; and video editing (supply a `video`). Prompt-driven narrative, optional generated audio, and an optional driving-audio track. 720p or 1080p, priced per resolution (see `resolution_pricing` in GET /v1/models); 5, 10, or 15 seconds. Video editing instead takes its length from the input clip (`length_seconds` and `aspect_ratio` are ignored) and bills the INPUT duration on top of the output at the same per-second rate — so a 10s clip costs 20 seconds'' worth; estimate via POST /v1/cost. (The Wan 2.7 image model is `wan-2.7` under POST /v1/images.)
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_wan_2_7_video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when a start image or an input `video` already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  type: string
+                audio:
+                  description: Optional driving-audio track (MP3/WAV/OGG) for the generated video. Provide a public audio URL or an uploaded-file URL from POST /v1/uploads (passed by URL, not inlined). Ignored when `generate_audio` is false.
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  default: true
+                  description: Generate audio with the video (default true; no price impact).
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with `video`.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds. Ignored for video editing, which inherits the input clip's length.
+                  enum:
+                  - 5
+                  - 10
+                  - 15
+                  type: integer
+                prompt:
+                  description: Text description of the video, or the edit instruction when `video` is supplied (for example "change the video to an 8-bit pixel style").
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 4, free) used only with `video` — they guide the edit, for example supplying the person or style to apply to the clip. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads.
+                  items:
+                    type: string
+                  maxItems: 4
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 720p
+                  - 1080p
+                  type: string
+                video:
+                  description: 'Optional input video to edit (2-15s, MP4/MOV, ≤100MB). Supplying it switches the request to video editing: the model applies `prompt` to this clip. Provide a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). Billed on the INPUT duration at the full per-second rate in addition to the output — estimate via POST /v1/cost. Can''t be combined with `image`/`end_image`.'
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Wan 2.7
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/wan-3.0-video:
+    post:
+      description: 'Alibaba Wan 3.0 — all-in-one video generation up to 30 seconds at 30fps. Text-to-video; image-to-video (first + optional last frame); and reference-to-video mixing up to 10 reference images, up to 5 reference video clips (15s combined) for editing/replication/extension, and up to 5 reference audio clips (15s combined). In reference mode the prompt can address assets by order ("Image 1", "Video 1"). Reference media can''t be combined with start/end frames. 480p/720p/1080p, priced per OUTPUT second by resolution (input media is free — see `resolution_pricing` in GET /v1/models); any duration 2-30 seconds (input video + output ≤ 30s); optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_wan_3_0_video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: adaptive
+                  description: Aspect ratio, honored in every mode (an explicit ratio reframes the output even with a first frame or reference media). "adaptive" (default) lets the model pick a suitable ratio from the inputs and prompt intent.
+                  enum:
+                  - adaptive
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  type: string
+                end_image:
+                  description: Optional last frame, used together with `image` (the first frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  default: true
+                  description: Generate audio with the video (default true; no price impact).
+                  type: boolean
+                image:
+                  description: Optional first frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with reference media.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Output video length in seconds (2-30). With reference videos, input duration + output length must not exceed 30 seconds.
+                  maximum: 30
+                  minimum: 2
+                  type: integer
+                prompt:
+                  description: 'Text description of the video, or the edit instruction when reference videos are supplied. In reference mode, address assets by order: "Image 1", "Video 1", "Audio 1".'
+                  type: string
+                reference_audios:
+                  description: Optional reference audio clips (up to 5; each 2-15s, 15s combined; WAV/MP3) that guide sound/voice. Free. Each item is a public audio URL or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 5
+                  type: array
+                reference_images:
+                  description: Optional reference images (up to 10, free) that guide identity/style/scene in reference-to-video mode. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                reference_videos:
+                  description: Optional reference video clips (up to 5; each 2-15s, 15s combined; MP4/MOV, ≤50MB each) for editing, effect/camera replication, and extension. Each item is a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). Free — only OUTPUT seconds are billed — but input video duration + `length_seconds` must not exceed 30. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 5
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 480p
+                  - 720p
+                  - 1080p
+                  type: string
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Wan 3.0
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/wan-3.0-video-prime:
+    post:
+      description: 'Alibaba Wan 3.0 Prime — the high-speed tier of Wan 3.0 with significantly faster end-to-end generation and the same all-in-one capabilities: text-to-video; image-to-video (first + optional last frame); and reference-to-video mixing up to 10 reference images, up to 5 reference video clips (15s combined) for editing/replication/extension, and up to 5 reference audio clips (15s combined). Reference media can''t be combined with start/end frames. 480p/720p/1080p, priced per OUTPUT second by resolution (input media is free — see `resolution_pricing` in GET /v1/models); any duration 2-30 seconds (input video + output ≤ 30s); optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_wan_3_0_video_prime
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: adaptive
+                  description: Aspect ratio, honored in every mode (an explicit ratio reframes the output even with a first frame or reference media). "adaptive" (default) lets the model pick a suitable ratio from the inputs and prompt intent.
+                  enum:
+                  - adaptive
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  type: string
+                end_image:
+                  description: Optional last frame, used together with `image` (the first frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  default: true
+                  description: Generate audio with the video (default true; no price impact).
+                  type: boolean
+                image:
+                  description: Optional first frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with reference media.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Output video length in seconds (2-30). With reference videos, input duration + output length must not exceed 30 seconds.
+                  maximum: 30
+                  minimum: 2
+                  type: integer
+                prompt:
+                  description: 'Text description of the video, or the edit instruction when reference videos are supplied. In reference mode, address assets by order: "Image 1", "Video 1", "Audio 1".'
+                  type: string
+                reference_audios:
+                  description: Optional reference audio clips (up to 5; each 2-15s, 15s combined; WAV/MP3) that guide sound/voice. Free. Each item is a public audio URL or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 5
+                  type: array
+                reference_images:
+                  description: Optional reference images (up to 10, free) that guide identity/style/scene in reference-to-video mode. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                reference_videos:
+                  description: Optional reference video clips (up to 5; each 2-15s, 15s combined; MP4/MOV, ≤50MB each) for editing, effect/camera replication, and extension. Each item is a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). Free — only OUTPUT seconds are billed — but input video duration + `length_seconds` must not exceed 30. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 5
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 480p
+                  - 720p
+                  - 1080p
+                  type: string
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Wan 3.0 Prime
+      tags:
+      - Alibaba
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    CreateVideoResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

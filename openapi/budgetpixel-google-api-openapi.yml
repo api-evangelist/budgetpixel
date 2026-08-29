@@ -1,0 +1,345 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Google API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Google across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- name: Google
+paths:
+  /images/nano-banana-2:
+    post:
+      description: 'Google Nano Banana 2 (Gemini 3.1 Flash Image) — high-efficiency text-to-image and image editing with multi-reference composition from up to 9 reference images and 0.5K-4K output. Billing: 65 credits per image at 1K (default); 50 at 0.5K, 100 at 2K, 150 at 4K.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_nano_banana_2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '2:3'
+                  - '3:2'
+                  - '3:4'
+                  - '4:3'
+                  - '4:5'
+                  - '5:4'
+                  - '9:16'
+                  - '16:9'
+                  - '21:9'
+                  - '1:4'
+                  - '4:1'
+                  - '1:8'
+                  - '8:1'
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                size:
+                  default: 1K
+                  description: Output resolution tier. 1K bills 65 credits per image; 0.5K bills 50, 2K bills 100, 4K bills 150.
+                  enum:
+                  - 0.5K
+                  - 1K
+                  - 2K
+                  - 4K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Nano Banana 2
+      tags:
+      - Google
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/nano-banana-2-lite:
+    post:
+      description: 'Google Nano Banana 2 Lite — budget Nano Banana 2: fast text-to-image and image editing with multi-reference composition from up to 14 reference images. Fixed 1K output at a flat 40 credits per image.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_nano_banana_2_lite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '2:3'
+                  - '3:2'
+                  - '3:4'
+                  - '4:3'
+                  - '4:5'
+                  - '5:4'
+                  - '9:16'
+                  - '16:9'
+                  - '21:9'
+                  - '1:4'
+                  - '4:1'
+                  - '1:8'
+                  - '8:1'
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 14) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
+                  items:
+                    type: string
+                  maxItems: 14
+                  type: array
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Nano Banana 2 Lite
+      tags:
+      - Google
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/nano-banana-pro:
+    post:
+      description: 'Google Nano Banana Pro (Gemini 3 Pro Image) — professional asset production with advanced reasoning, precise instruction-based editing, and multi-reference composition from up to 9 reference images. Billing: 120 credits per image at 1K/2K, 180 at 4K.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_nano_banana_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '2:3'
+                  - '3:2'
+                  - '3:4'
+                  - '4:3'
+                  - '4:5'
+                  - '5:4'
+                  - '9:16'
+                  - '16:9'
+                  - '21:9'
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                size:
+                  default: 2K
+                  description: Output resolution tier. 1K/2K bill 120 credits per image; 4K bills 180.
+                  enum:
+                  - 1K
+                  - 2K
+                  - 4K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Nano Banana Pro
+      tags:
+      - Google
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

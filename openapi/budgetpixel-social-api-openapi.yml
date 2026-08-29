@@ -1,0 +1,229 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Social API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Social across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Publish posts to your BudgetPixel feed
+  name: Social
+paths:
+  /posts:
+    post:
+      description: "Publish a post to your public BudgetPixel feed — the same posts you create on the\nsite, so your local agent can publish on your behalf. **Synchronous**: the response\ncarries the live post's `id` and `url`.\n\n**Pricing: 10 credits per successful post**, charged only on success. Estimate via\n[`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with\n`{\"model\": \"create-post\"}`.\n\n**Media composition** (one of):\n- **Images** — 1 to 6 images. Each image can optionally carry `model` and\n  `prompt` generation info, shown on the image's info panel on the post.\n- **Video** — exactly 1 video, optionally with up to 3 accompanying images.\n- **Audio** — exactly 1 audio file (cannot mix with other media). Supports\n  `song_name`, `genre`, `lyrics`, and dedicated `cover_image` art (the cover is\n  NOT a media item — pass it in its own field).\n\nEach `media[].file` accepts a public URL, an uploaded-file URL from\n[`POST /v1/uploads`](/api-reference/files/upload-input-media), a data URI, or raw\nbase64. **Size limits:** images 15 MB; audio 50 MB; video 100 MB — note that URL\ninputs are fetched with a 30 MB cap and uploads support up to 50 MB, so ~50 MB is\nthe practical video ceiling via the API.\n\n**Limits & moderation:**\n- The API allows **5 posts per hour**, inside the site-wide limit of **20 posts\n  per hour** per account across all surfaces (shares included) — both on top of\n  the API's global rate limits. Exceeding any of them returns `429`.\n- Posting a byte-identical file you've already posted returns `409` with the\n  existing post's id.\n- Posts published through the API carry a public **\"via API\"** label, like posts\n  made with an Ava companion carry hers.\n- Image/video posts are **reviewed after publishing** (content rating and spam\n  scoring). Feed and gallery visibility follow that review and your account\n  standing; a post hidden by review is not refunded.\n"
+      operationId: createPost
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                content:
+                  description: Optional caption (max 2000 characters).
+                  type: string
+                cover_image:
+                  description: Audio posts only — cover art for the track (a public URL, an uploaded-file URL, a data URI, or raw base64; image, max 15 MB). Passed as its own field, never as a `media` item (audio posts can't mix media).
+                  type: string
+                genre:
+                  description: Audio posts only — one of the site's canonical music genres (exact match). Omit to have the genre classified automatically after publishing.
+                  enum:
+                  - Pop
+                  - Rock
+                  - Hip-Hop & Rap
+                  - R&B & Soul
+                  - Electronic & Dance
+                  - Lo-fi & Chill
+                  - Ambient
+                  - Jazz
+                  - Classical
+                  - Country
+                  - Folk & Acoustic
+                  - Metal
+                  - Blues
+                  - Latin
+                  - K-Pop & J-Pop
+                  - Reggae
+                  - Soundtrack & Cinematic
+                  - Other
+                  type: string
+                lyrics:
+                  description: Audio posts only.
+                  type: string
+                media:
+                  description: 'The post''s media items, in display order. One of: 1-6 images; OR exactly 1 video plus up to 3 images; OR exactly 1 audio file (audio can''t mix with other media).'
+                  items:
+                    properties:
+                      file:
+                        description: Public URL, uploaded-file URL, data URI, or raw base64.
+                        type: string
+                      model:
+                        description: Images only — the model that generated this image, shown on the image's info panel (e.g. `seedream-5.0-pro`).
+                        maxLength: 100
+                        type: string
+                      prompt:
+                        description: Images only — the prompt that generated this image, shown on the image's info panel.
+                        maxLength: 10000
+                        type: string
+                      type:
+                        description: Optional declared kind — validated against the file's actual content.
+                        enum:
+                        - image
+                        - video
+                        - audio
+                        type: string
+                    required:
+                    - file
+                    type: object
+                  maxItems: 6
+                  minItems: 1
+                  type: array
+                song_name:
+                  description: Audio posts only — track title.
+                  type: string
+              required:
+              - media
+              type: object
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePostResponse'
+          description: Post published.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits to publish.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Duplicate media — you already posted a byte-identical file.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Publish a post
+      tags:
+      - Social
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    CreatePostResponse:
+      description: A published post.
+      properties:
+        credits_charged:
+          example: 10
+          type: integer
+        id:
+          description: The post id.
+          type: integer
+        media_type:
+          enum:
+          - image
+          - video
+          - audio
+          type: string
+        moderation:
+          description: Image/video posts are rated after publish; feed visibility follows the review.
+          example: pending
+          type: string
+        url:
+          description: Public URL of the post.
+          example: https://budgetpixel.com/p/12345
+          format: uri
+          type: string
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

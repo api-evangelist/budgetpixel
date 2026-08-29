@@ -1,0 +1,147 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Videos API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Videos across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Video job status
+  name: Videos
+paths:
+  /videos/{job_id}:
+    get:
+      description: 'Poll until `status` is `succeeded`. The generated video is returned as a
+
+        short-lived signed `video_url` (valid for several hours; re-call for a fresh
+
+        URL anytime — the underlying object is deleted 24h after generation).
+
+        '
+      operationId: getVideo
+      parameters:
+      - description: The opaque job id returned by the create endpoint.
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoJob'
+          description: Current job status. `video_url` is populated once succeeded.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      summary: Get video job status
+      tags:
+      - Videos
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
+  schemas:
+    VideoJob:
+      properties:
+        aspect_ratio:
+          type: string
+        completed_at:
+          format: date-time
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        error_message:
+          type: string
+        id:
+          type: string
+        length_seconds:
+          type: integer
+        model:
+          type: string
+        started_at:
+          format: date-time
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        updated_at:
+          format: date-time
+          type: string
+        video_url:
+          description: Short-lived presigned URL; present once `status=succeeded`.
+          format: uri
+          type: string
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

@@ -1,0 +1,273 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Models API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Models across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Discover available models and pricing
+  name: Models
+paths:
+  /cost:
+    post:
+      description: 'Returns the credit cost of a generation request **without running it**. Send the same
+
+        body you''d send to the generate endpoint, plus `model`.
+
+
+        The cost is computed by the same logic that bills you, so it can''t disagree with the
+
+        invoice. `exact` is `true` for deterministic pricing. For seedream''s sequential mode
+
+        (the model chooses how many images, up to `max_images`) `credits` is the ceiling we
+
+        reserve and `exact` is `false` — the real charge is always ≤ it. Failed jobs cost
+
+        nothing, so you''re never charged more than `credits`.
+
+        '
+      operationId: estimateCost
+      requestBody:
+        content:
+          application/json:
+            example:
+              length_seconds: 5
+              model: seedance-2.0
+              resolution: 1080p
+            schema:
+              additionalProperties: true
+              properties:
+                model:
+                  description: The model slug (image or video), e.g. `seedance-2.0`.
+                  type: string
+              required:
+              - model
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostEstimate'
+          description: The estimated cost.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Estimate the cost of a request
+      tags:
+      - Models
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /models:
+    get:
+      description: Returns the models available via the API, with pricing.
+      operationId: listModels
+      parameters:
+      - description: Filter by model type.
+        in: query
+        name: type
+        required: false
+        schema:
+          enum:
+          - image
+          - video
+          - audio
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    items:
+                      $ref: '#/components/schemas/Model'
+                    type: array
+                type: object
+          description: The list of available models.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      summary: List available models
+      tags:
+      - Models
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
+  schemas:
+    Model:
+      properties:
+        credits_per_generation:
+          description: Per-output-image cost (images) or per-track cost (music). 0 for per-second models (video, sound effects) — see credits_per_unit.
+          example: 45
+          type: integer
+        credits_per_unit:
+          description: Per-unit cost for metered models (e.g. per second of video). For resolution-priced models this is the default resolution's rate.
+          example: 220
+          type: integer
+        min_billable_seconds:
+          description: Billing floor for per-second audio models (sound effects, Sonilo Music) — cost = credits_per_unit × max(min_billable_seconds, seconds rounded up). Absent for flat-priced models.
+          example: 3
+          type: integer
+        name:
+          example: flux-2-klein
+          type: string
+        resolution_pricing:
+          additionalProperties:
+            type: integer
+          description: For video models whose per-second rate varies by resolution, a map of resolution to per-second cost. Absent when pricing is flat.
+          example:
+            4k: 1250
+            480p: 100
+            720p: 220
+            1080p: 550
+          type: object
+        type:
+          enum:
+          - image
+          - video
+          - audio
+          type: string
+        unit_type:
+          description: The unit `credits_per_unit` applies to.
+          enum:
+          - generation
+          - second
+          type: string
+      required:
+      - name
+      - type
+      - credits_per_generation
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    CostEstimate:
+      description: The credit cost of a request. The real charge is always ≤ `credits` (failures cost nothing; sequential image jobs may use fewer images).
+      properties:
+        credits:
+          description: Credits the request will cost — the maximum, for non-deterministic cases.
+          example: 2750
+          type: integer
+        exact:
+          description: True when the cost is exact; false when `credits` is an upper bound (e.g. seedream sequential, where the model picks the image count).
+          type: boolean
+        model:
+          example: seedance-2.0
+          type: string
+        type:
+          enum:
+          - image
+          - video
+          - audio
+          - conversion
+          - social
+          - moderation
+          - classification
+          - motion
+          - lip-sync
+          - upscale
+          - video-upscale
+          type: string
+      required:
+      - model
+      - type
+      - credits
+      - exact
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

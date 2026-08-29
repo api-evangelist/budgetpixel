@@ -1,0 +1,193 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Classification API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Classification across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Content classification — music genre detection
+  name: Classification
+paths:
+  /classifications/music-genre:
+    post:
+      description: 'Classify one song into BudgetPixel''s canonical music genre taxonomy —
+
+        the same classifier that powers the site''s music gallery. **Synchronous**:
+
+        the response carries the genre plus style/mood tags and a confidence score.
+
+
+        **Input**: one song (`audio`), max **20 MB** and **7 minutes**, as MP3, WAV,
+
+        OGG, M4A, or FLAC. Accepts a public URL, an uploaded-file URL from
+
+        [`POST /v1/uploads`](/api-reference/files/upload-input-media), a data URI, or
+
+        raw base64. Tip: a 7-minute WAV exceeds 20 MB — use MP3 for long tracks.
+
+
+        The classifier listens to a ~30-second excerpt sampled from ~25% into the
+
+        track (the `clip` field in the response tells you the exact window). Only
+
+        that excerpt is retained — privately, for ~1 day — never the full upload.
+
+
+        **Pricing: flat 10 credits per song.** Estimate via
+
+        [`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with
+
+        `{"model": "music-genre"}`. Charged on success only — a classifier failure
+
+        costs nothing.
+
+        '
+      operationId: classifyMusicGenre
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                audio:
+                  description: One song (public URL, uploaded-file URL, data URI, or raw base64). Max 20 MB and 7 minutes. MP3/WAV/OGG/M4A/FLAC.
+                  type: string
+              required:
+              - audio
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  clip:
+                    description: The excerpt the classifier heard.
+                    properties:
+                      duration_seconds:
+                        type: number
+                      start_seconds:
+                        type: number
+                    type: object
+                  confidence:
+                    description: Classifier confidence, 0-1.
+                    type: number
+                  credits_charged:
+                    type: integer
+                  genre:
+                    description: Canonical genre, e.g. `Electronic & Dance`. One of the site's music genres.
+                    type: string
+                  genre_slug:
+                    description: URL-safe slug of the genre, e.g. `electronic-and-dance`.
+                    type: string
+                  id:
+                    description: Classification request id (audit reference).
+                    type: string
+                  mood:
+                    description: One short mood phrase.
+                    type: string
+                  tags:
+                    description: 3-6 style/mood/instrument tags.
+                    items:
+                      type: string
+                    type: array
+                type: object
+          description: The classification.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Classify a song's music genre
+      tags:
+      - Classification
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

@@ -1,0 +1,307 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Moderation API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Moderation across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Content moderation — NSFW rating and CSAM detection
+  name: Moderation
+paths:
+  /moderations/csam:
+    post:
+      description: 'Check text, images, and/or one video for child sexual abuse material (CSAM),
+
+        using the same child-safety classifier and rubric BudgetPixel runs on all
+
+        platform content. **Synchronous**: the response carries a boolean verdict,
+
+        a confidence score, and a short reason.
+
+
+        **Inputs, formats, and size caps** are identical to
+
+        [`POST /v1/moderations/nsfw`](/api-reference/moderation/rate-content-nsfw-level):
+
+        `prompt`, up to 10 `images` (10 MB each), one `video` (100 MB / 5 minutes,
+
+        5 frames sampled). At least one input is required.
+
+
+        **Pricing: 2 credits base + 3 per image + 15 for a video.** Estimate via
+
+        [`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with
+
+        `{"model": "moderation-csam", "images": 2}`. Charged on success only.
+
+
+        **Child-safety notice:** submitted media is retained privately for ~1 day.
+
+        Content our classifier flags as suspected CSAM is **preserved and escalated
+
+        for human review**, and confirmed material is reported to the relevant
+
+        authorities (e.g. NCMEC) with the submitting account actioned. Do not submit
+
+        content you believe is real CSAM — report it to law enforcement instead.
+
+        '
+      operationId: moderateCSAM
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                images:
+                  description: Up to 10 images (public URL, uploaded-file URL, data URI, or raw base64). Max 10 MB each.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                prompt:
+                  description: Text to check (alone, or as context for the media).
+                  type: string
+                video:
+                  description: One video (public URL, uploaded-file URL, data URI, or raw base64). Max 100 MB and 5 minutes.
+                  type: string
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  confidence:
+                    description: Classifier confidence, 0-1.
+                    type: number
+                  credits_charged:
+                    type: integer
+                  csam:
+                    description: True when the submission is judged to be CSAM.
+                    type: boolean
+                  id:
+                    description: Moderation request id (audit reference).
+                    type: string
+                  reason:
+                    description: Short explanation (never a detailed description of the content).
+                    type: string
+                type: object
+          description: The verdict.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Check content for CSAM
+      tags:
+      - Moderation
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /moderations/nsfw:
+    post:
+      description: 'Rate text, images, and/or one video on BudgetPixel''s 4-level NSFW scale —
+
+        the same classifier and scale the platform itself moderates with.
+
+        **Synchronous**: the response carries the verdict.
+
+
+        **Levels:**
+
+        - `0` (`sfw`) — safe for work. Non-sexual violence, action, and blood stay here.
+
+        - `1` (`teen`) — mildly suggestive (swimwear/underwear in a non-sexual context).
+
+        - `2` (`mature`) — partial nudity or overtly sexual posing, no genitals.
+
+        - `3` (`x-rated`) — explicit sexual content, visible genitals, or extreme gore.
+
+
+        **Inputs** (at least one required): `prompt` (text), `images` (up to 10, max 10 MB
+
+        each), `video` (one, max 100 MB and 5 minutes — 5 frames are sampled). Media
+
+        values accept a public URL, an uploaded-file URL from
+
+        [`POST /v1/uploads`](/api-reference/files/upload-input-media), a data URI, or raw
+
+        base64. Everything is downscaled before classification; the rating is for the
+
+        submission **as a whole** (highest applicable level), with one overall `reason`.
+
+
+        **Pricing: 2 credits base + 3 per image + 15 for a video.** Estimate via
+
+        [`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with
+
+        `{"model": "moderation-nsfw", "images": 2, "video": true}`. Charged on success
+
+        only — a classifier failure costs nothing.
+
+
+        Submitted media is retained privately for ~1 day (for abuse review), then
+
+        deleted automatically.
+
+        '
+      operationId: moderateNSFW
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                images:
+                  description: Up to 10 images (public URL, uploaded-file URL, data URI, or raw base64). Max 10 MB each.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                prompt:
+                  description: Text to rate (alone, or as context for the media).
+                  type: string
+                video:
+                  description: One video (public URL, uploaded-file URL, data URI, or raw base64). Max 100 MB and 5 minutes.
+                  type: string
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  confidence:
+                    description: Classifier confidence, 0-1.
+                    type: number
+                  credits_charged:
+                    type: integer
+                  id:
+                    description: Moderation request id (audit reference).
+                    type: string
+                  label:
+                    enum:
+                    - sfw
+                    - teen
+                    - mature
+                    - x-rated
+                    type: string
+                  level:
+                    description: Overall NSFW level of the submission.
+                    enum:
+                    - 0
+                    - 1
+                    - 2
+                    - 3
+                    type: integer
+                  reason:
+                    description: Short overall explanation.
+                    type: string
+                type: object
+          description: The rating.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Rate content NSFW level
+      tags:
+      - Moderation
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

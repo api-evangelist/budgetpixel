@@ -1,0 +1,223 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Sound Effects API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Sound Effects across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Text-to-sound-effect models (priced per second)
+  name: Sound Effects
+paths:
+  /audios/sonilo-sfx:
+    post:
+      description: 'Sonilo text-to-sound-effect — Foley, ambience, UI sounds, transitions, impacts and action effects from a short description, 1-180 seconds long. Priced per second of the requested duration with a 3-second minimum (see GET /v1/models for the rate; POST /v1/cost quotes the exact price). MP3 or WAV output.
+
+
+        **Asynchronous.** Returns a job `id` (the sound effect is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the clip URL is in that response''s `audio_url`. Charged per second of the requested `duration` (3-second minimum; rate in `GET /v1/models`) on success only; `POST /v1/cost` quotes the exact price.'
+      operationId: createAudio_sonilo_sfx
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                duration:
+                  default: 10
+                  description: Length of the effect in seconds (1-180). Billed per second with a 3-second minimum.
+                  maximum: 180
+                  minimum: 1
+                  type: integer
+                format:
+                  default: mp3
+                  description: Output audio format.
+                  enum:
+                  - mp3
+                  - wav
+                  type: string
+                prompt:
+                  description: Description of the sound effect (up to 1000 characters), e.g. "heavy rain on a tin roof with distant thunder".
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAudioResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate sound effect with Sonilo SFX
+      tags:
+      - Sound Effects
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /audios/sonilo-video-sfx:
+    post:
+      description: 'Sonilo video-to-sound-effect — frame-accurate Foley, ambience, impacts and action sounds synced to the visible events of an input video (up to 6 minutes). Returns the SFX track (`audio_url`, MP3 or WAV) and the video with the effects mixed in (`video_url`). Priced per second of the input video''s measured duration (whole seconds, 3-second minimum) — see GET /v1/models for the rate.
+
+
+        **Asynchronous.** Returns a job `id` (nothing is generated yet in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the SFX track is that response''s `audio_url` and the input video with the effects mixed in is its `video_url`. Charged per second of the input video''s measured duration (whole seconds, 3-second minimum; rate in `GET /v1/models`) on success only.'
+      operationId: createAudio_sonilo_video_sfx
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                format:
+                  default: mp3
+                  description: Output audio format of the SFX track.
+                  enum:
+                  - mp3
+                  - wav
+                  type: string
+                prompt:
+                  description: Optional direction for the sound design (up to 1000 characters), e.g. "realistic Foley and ambience, no music".
+                  type: string
+                video:
+                  description: The input video (MP4/WebM, up to 360 seconds, 30 MB remote-fetch cap). A public video URL, an uploaded-file URL from POST /v1/uploads, a data URI, or raw base64. Its duration is measured server-side and is the billing basis.
+                  type: string
+              required:
+              - video
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAudioResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate sound effect with Sonilo Video SFX
+      tags:
+      - Sound Effects
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    CreateAudioResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: aud_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

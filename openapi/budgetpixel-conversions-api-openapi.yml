@@ -1,0 +1,334 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Conversions API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Conversions across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Format conversion for images, video, and audio
+  name: Conversions
+paths:
+  /convert/audio:
+    post:
+      description: 'Convert audio to `mp3`, `wav`, `ogg`, or `m4a`. **Synchronous** — the converted
+
+        file''s download URL is in the response.
+
+
+        **Pricing: 3 credits per conversion**, charged only on success. Estimate via
+
+        [`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with
+
+        `{"model": "convert-audio"}`.
+
+
+        `file` accepts a public URL (up to 30 MB), an uploaded-file URL from
+
+        [`POST /v1/uploads`](/api-reference/files/upload-input-media), a data URI, or raw
+
+        base64. Input limit 30 MB. Results are stored privately and deleted after 7 days.
+
+        '
+      operationId: convertAudio
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                file:
+                  description: The audio to convert — public URL, uploaded-file URL, data URI, or raw base64.
+                  type: string
+                target:
+                  description: Output format.
+                  enum:
+                  - mp3
+                  - wav
+                  - ogg
+                  - m4a
+                  type: string
+              required:
+              - file
+              - target
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertResponse'
+          description: Converted. Download from `url` (valid several hours; file kept 7 days).
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits for this conversion.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Convert an audio file
+      tags:
+      - Conversions
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /convert/image:
+    post:
+      description: 'Convert an image to `png`, `jpg`, `webp`, or `gif`. **Synchronous** — the converted
+
+        file''s download URL is in the response (no job to poll).
+
+
+        **Pricing: 2 credits per conversion**, charged only on success. Estimate via
+
+        [`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with
+
+        `{"model": "convert-image"}`.
+
+
+        `file` accepts a public URL (up to 30 MB), an uploaded-file URL from
+
+        [`POST /v1/uploads`](/api-reference/files/upload-input-media), a data URI, or raw
+
+        base64. Input limit 20 MB. Results are stored privately and deleted after 7 days.
+
+        '
+      operationId: convertImage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                file:
+                  description: The image to convert — public URL, uploaded-file URL, data URI, or raw base64.
+                  type: string
+                target:
+                  description: Output format.
+                  enum:
+                  - png
+                  - jpg
+                  - webp
+                  - gif
+                  type: string
+              required:
+              - file
+              - target
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertResponse'
+          description: Converted. Download from `url` (valid several hours; file kept 7 days).
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits for this conversion.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Convert an image
+      tags:
+      - Conversions
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /convert/video:
+    post:
+      description: 'Convert a video to `mp4`, `webm`, `mov`, or `gif` (video→gif is palette-optimized).
+
+        An animated GIF input converts to any video target (gif→mp4). **Synchronous** — the
+
+        converted file''s download URL is in the response.
+
+
+        **Pricing: 10 credits per conversion**, charged only on success. Estimate via
+
+        [`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with
+
+        `{"model": "convert-video"}`.
+
+
+        `file` accepts a public URL (up to 30 MB), an uploaded-file URL from
+
+        [`POST /v1/uploads`](/api-reference/files/upload-input-media) (up to 50 MB), a data
+
+        URI, or raw base64. **Videos must be 30 seconds or shorter.** Results are stored
+
+        privately and deleted after 7 days.
+
+        '
+      operationId: convertVideo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                file:
+                  description: The video (or animated GIF) to convert — public URL, uploaded-file URL, data URI, or raw base64.
+                  type: string
+                target:
+                  description: Output format.
+                  enum:
+                  - mp4
+                  - webm
+                  - mov
+                  - gif
+                  type: string
+              required:
+              - file
+              - target
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertResponse'
+          description: Converted. Download from `url` (valid several hours; file kept 7 days).
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits for this conversion.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Convert a video
+      tags:
+      - Conversions
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    ConvertResponse:
+      description: A completed format conversion. Download from `url`.
+      properties:
+        content_type:
+          example: image/webp
+          type: string
+        credits_charged:
+          description: Credits charged for this conversion (2 image / 10 video / 3 audio).
+          type: integer
+        filename:
+          description: Suggested download filename.
+          example: photo.webp
+          type: string
+        retention:
+          example: 7 days
+          type: string
+        size_bytes:
+          description: Converted file size in bytes.
+          type: integer
+        url:
+          description: Signed download URL for the converted file (valid several hours; the file itself is kept 7 days).
+          format: uri
+          type: string
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

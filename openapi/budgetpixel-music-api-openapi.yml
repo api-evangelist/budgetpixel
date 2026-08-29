@@ -1,0 +1,387 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Music API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Music across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Music generation models
+  name: Music
+paths:
+  /audios/lyria-3:
+    post:
+      description: 'Google Lyria 3 — high-fidelity music from a text prompt, with optional lyrics and up to 10 reference images to condition the mood. MP3 output (SynthID-watermarked).
+
+
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+      operationId: createAudio_lyria_3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                images:
+                  description: Optional reference images (up to 10) to condition the track's mood/theme. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                lyrics:
+                  description: Optional lyrics (up to 3000 characters).
+                  type: string
+                prompt:
+                  description: Description of the music to generate (10-2000 characters).
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAudioResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate music with Lyria 3
+      tags:
+      - Music
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /audios/mureka-v9:
+    post:
+      description: 'Mureka V9 — songs that sing your exact lyrics (structural tags like [verse]/[chorus] supported) with a vocal gender preference, or instrumental/BGM tracks from a prompt. MP3 output.
+
+
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+      operationId: createAudio_mureka_v9
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                instrumental:
+                  default: false
+                  description: Generate an instrumental/BGM track from the prompt (no vocals, lyrics ignored).
+                  type: boolean
+                lyrics:
+                  description: Lyrics to sing verbatim (1-5000 characters; [verse]/[chorus]/[bridge] tags supported). Required for songs; ignored for instrumental tracks.
+                  type: string
+                prompt:
+                  description: Style hint (up to 1024 characters). Optional for songs; required for instrumental tracks.
+                  type: string
+                vocal_gender:
+                  default: auto
+                  description: Preferred vocal gender for songs.
+                  enum:
+                  - auto
+                  - female
+                  - male
+                  type: string
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAudioResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate music with Mureka V9
+      tags:
+      - Music
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /audios/music-2.6:
+    post:
+      description: 'MiniMax Music 2.6 — full-length songs from a style prompt and/or your own lyrics. Lyrics optimizer can write or polish lyrics from the prompt; instrumental mode skips vocals. MP3 or WAV output.
+
+
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+      operationId: createAudio_music_2_6
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                format:
+                  default: wav
+                  description: Output audio format. Defaults to wav (lossless); choose mp3 for a smaller file.
+                  enum:
+                  - wav
+                  - mp3
+                  type: string
+                instrumental:
+                  default: false
+                  description: Generate an instrumental track (no vocals).
+                  type: boolean
+                lyrics:
+                  description: Lyrics to sing (1-3500 characters). Required unless instrumental is true or lyrics_optimizer is true (the optimizer writes lyrics from the prompt).
+                  type: string
+                lyrics_optimizer:
+                  default: true
+                  description: Let the model write or polish lyrics from the prompt. Default true.
+                  type: boolean
+                prompt:
+                  description: Style/mood description of the track (up to 2000 characters). Optional when lyrics are provided.
+                  type: string
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAudioResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate music with Music 2.6
+      tags:
+      - Music
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /audios/music-3.0:
+    post:
+      description: 'MiniMax Music 3.0 — the latest MiniMax music model: full-length songs from a style prompt and/or your own lyrics. Lyrics optimizer can write or polish lyrics from the prompt; instrumental mode skips vocals. WAV or MP3 output.
+
+
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+      operationId: createAudio_music_3_0
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                format:
+                  default: wav
+                  description: Output audio format. Defaults to wav (lossless); choose mp3 for a smaller file.
+                  enum:
+                  - wav
+                  - mp3
+                  type: string
+                instrumental:
+                  default: false
+                  description: Generate an instrumental track (no vocals).
+                  type: boolean
+                lyrics:
+                  description: Lyrics to sing (1-3500 characters). Required unless instrumental is true or lyrics_optimizer is true (the optimizer writes lyrics from the prompt).
+                  type: string
+                lyrics_optimizer:
+                  default: true
+                  description: Let the model write or polish lyrics from the prompt. Default true.
+                  type: boolean
+                prompt:
+                  description: Style/mood description of the track (up to 2000 characters). Optional when lyrics are provided.
+                  type: string
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAudioResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate music with Music 3.0
+      tags:
+      - Music
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /audios/sonilo-music:
+    post:
+      description: 'Sonilo text-to-music — licensed instrumental and background music of an exact length (5-360 seconds) from a text prompt: soundtracks for videos, ads, apps and games. Priced per second of the requested duration with a 10-second minimum (rate in GET /v1/models; POST /v1/cost quotes the exact price). MP3 or WAV output.
+
+
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`. Charged per second of the requested `duration` (10-second minimum; rate in `GET /v1/models`) on success only; `POST /v1/cost` quotes the exact price.'
+      operationId: createAudio_sonilo_music
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                duration:
+                  default: 30
+                  description: Length of the track in seconds (5-360). Billed per second with a 10-second minimum.
+                  maximum: 360
+                  minimum: 5
+                  type: integer
+                format:
+                  default: mp3
+                  description: Output audio format.
+                  enum:
+                  - mp3
+                  - wav
+                  type: string
+                prompt:
+                  description: Description of the music (up to 2000 characters; even a few words work), e.g. "30 seconds of upbeat electronic instrumental for a product launch video, no vocals".
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAudioResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate music with Sonilo Music
+      tags:
+      - Music
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    CreateAudioResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: aud_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

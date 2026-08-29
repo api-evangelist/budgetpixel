@@ -1,0 +1,199 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Mini Max API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged MiniMax across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- name: MiniMax
+paths:
+  /videos/minimax-h3:
+    post:
+      description: 'MiniMax H3 — multimodal 2K video. Text-to-video; image-to-video (start + optional end frame); and reference-to-video mixing up to 5 reference images, up to 3 reference video clips (2-15s each, 15s combined — billed per second of INPUT on top of the output, see POST /v1/cost), and up to 3 reference audio clips (15s combined, free). Reference media can''t be combined with start/end frames. Any duration from 4 to 15 seconds.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_minimax_h3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio for text-to-video. Ignored (adaptive) when any image or reference input sets the frame.
+                  enum:
+                  - '21:9'
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with reference media.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Output video length in seconds (4-15).
+                  maximum: 15
+                  minimum: 4
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                reference_audios:
+                  description: Optional reference audio clips (up to 3; each 2-15s, 15s combined; WAV/MP3) that guide sound/voice in reference-to-video mode. Each item is a public audio URL or an uploaded-file URL from POST /v1/uploads. Free — no input billing. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 3
+                  type: array
+                reference_images:
+                  description: Optional reference images (up to 5) that guide identity/style in reference-to-video mode. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 5
+                  type: array
+                reference_videos:
+                  description: Optional reference video clips (up to 3; each 2-15s, 15s combined; MP4/WebM, ≤30MB each) that guide motion/identity in reference-to-video mode. Each item is a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). Billed at the model's per-second rate on the INPUT duration in addition to the output — estimate via POST /v1/cost. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 3
+                  type: array
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with MiniMax H3
+      tags:
+      - MiniMax
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    CreateVideoResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

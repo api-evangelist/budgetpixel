@@ -1,0 +1,547 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel ByteDance (SeeDance) API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged ByteDance (SeeDance) across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: SeeDance video models
+  name: ByteDance (SeeDance)
+paths:
+  /videos/seedance-1.5-pro:
+    post:
+      description: 'ByteDance SeeDance 1.5 Pro — text-to-video, plus image-to-video with a start frame and an optional end frame. Up to 1080p, optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_seedance_1_5_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '21:9'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds.
+                  enum:
+                  - 5
+                  - 10
+                  - 12
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                resolution:
+                  default: 720p
+                  description: Output resolution.
+                  enum:
+                  - 480p
+                  - 720p
+                  - 1080p
+                  type: string
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with SeeDance 1.5 Pro
+      tags:
+      - ByteDance (SeeDance)
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/seedance-2.0:
+    post:
+      description: 'ByteDance SeeDance 2.0 — text-to-video; image-to-video (start + optional end frame); reference-images-to-video (up to 9 images); and video-to-video editing (supply a `video`). Resolutions 480p–4K, each priced differently (see `resolution_pricing` in GET /v1/models); 4K is for text/image/reference modes, not video-edit. Optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_seedance_2_0
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when an input image or video already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '21:9'
+                  type: string
+                audio:
+                  description: Optional reference audio (MP3/WAV/OGG) for the generated video. Provide a public audio URL or an uploaded-file URL from POST /v1/uploads (passed by URL, not inlined). Must accompany an image (`image` or `reference_images`) or a `video` input — audio can't be the only input.
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (4–15).
+                  maximum: 15
+                  minimum: 4
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                reference_images:
+                  description: Optional reference images that guide the generated video. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image` (start/end frames). Up to 9 on their own (reference-images-to-video); may also accompany a `video` to guide a video-edit, in which case up to 6 are used.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 480p
+                  - 720p
+                  - 1080p
+                  - 4k
+                  type: string
+                video:
+                  description: Optional input video for video-to-video editing (2-15s, ≤100MB). Provide a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). When set, the request runs in video-edit mode; you may also pass `reference_images` (up to 6) and/or an `audio` track to guide the edit. Not combinable with `image`/`end_image`. Billed on the INPUT duration at half the output per-second rate in addition to the output — estimate via POST /v1/cost.
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with SeeDance 2.0
+      tags:
+      - ByteDance (SeeDance)
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/seedance-2.0-fast:
+    post:
+      description: 'ByteDance SeeDance 2.0 Fast — the same modes as SeeDance 2.0 (text / image / reference / video-to-video) at lower cost and latency. Resolutions 480p and 720p (see `resolution_pricing` in GET /v1/models). Optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_seedance_2_0_fast
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when an input image or video already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '21:9'
+                  type: string
+                audio:
+                  description: Optional reference audio (MP3/WAV/OGG) for the generated video. Provide a public audio URL or an uploaded-file URL from POST /v1/uploads (passed by URL, not inlined). Must accompany an image (`image` or `reference_images`) or a `video` input — audio can't be the only input.
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (4–15).
+                  maximum: 15
+                  minimum: 4
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                reference_images:
+                  description: Optional reference images that guide the generated video. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image` (start/end frames). Up to 9 on their own (reference-images-to-video); may also accompany a `video` to guide a video-edit, in which case up to 6 are used.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 480p
+                  - 720p
+                  type: string
+                video:
+                  description: Optional input video for video-to-video editing (2-15s, ≤100MB). Provide a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). When set, the request runs in video-edit mode; you may also pass `reference_images` (up to 6) and/or an `audio` track to guide the edit. Not combinable with `image`/`end_image`. Billed on the INPUT duration at half the output per-second rate in addition to the output — estimate via POST /v1/cost.
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with SeeDance 2.0 Fast
+      tags:
+      - ByteDance (SeeDance)
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/seedance-2.0-mini:
+    post:
+      description: 'ByteDance SeeDance 2.0 Mini — the same modes as SeeDance 2.0 (text / image / reference / video-to-video) at the best cost-performance. Resolutions 480p and 720p (see `resolution_pricing` in GET /v1/models). Optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_seedance_2_0_mini
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when an input image or video already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '21:9'
+                  type: string
+                audio:
+                  description: Optional reference audio (MP3/WAV/OGG) for the generated video. Provide a public audio URL or an uploaded-file URL from POST /v1/uploads (passed by URL, not inlined). Must accompany an image (`image` or `reference_images`) or a `video` input — audio can't be the only input.
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (4–15).
+                  maximum: 15
+                  minimum: 4
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                reference_images:
+                  description: Optional reference images that guide the generated video. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image` (start/end frames). Up to 9 on their own (reference-images-to-video); may also accompany a `video` to guide a video-edit, in which case up to 6 are used.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 480p
+                  - 720p
+                  type: string
+                video:
+                  description: Optional input video for video-to-video editing (2-15s, ≤100MB). Provide a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). When set, the request runs in video-edit mode; you may also pass `reference_images` (up to 6) and/or an `audio` track to guide the edit. Not combinable with `image`/`end_image`. Billed on the INPUT duration at half the output per-second rate in addition to the output — estimate via POST /v1/cost.
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with SeeDance 2.0 Mini
+      tags:
+      - ByteDance (SeeDance)
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/seedance-2.5:
+    post:
+      description: 'ByteDance SeeDance 2.5 — flagship multimodal video. Text-to-video; image-to-video (start + optional end frame); and reference-to-video mixing up to 15 reference images (free), up to 5 reference video clips (2-15s each, 30s combined — billed per second of INPUT at half the output rate, see POST /v1/cost), and up to 5 reference audio clips (30s combined, free; audio-only input is supported). Video editing and extension are reference-video modes — no separate edit endpoint. Reference media can''t be combined with start/end frames. 480p/720p/1080p, any duration 4-30 seconds, optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_seedance_2_5
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio for text-to-video. Ignored (adaptive) when a start frame or any reference media sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '21:9'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video (no price impact).
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with reference media.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Output video length in seconds (4-30).
+                  maximum: 30
+                  minimum: 4
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                reference_audios:
+                  description: Optional reference audio clips (up to 5; each 2-15s, 30s combined; WAV/MP3) that guide sound/voice. Audio-only input is supported. Each item is a public audio URL or an uploaded-file URL from POST /v1/uploads. Free — no input billing. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 5
+                  type: array
+                reference_images:
+                  description: Optional reference images (up to 15, free) that guide identity/style in reference-to-video mode. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 15
+                  type: array
+                reference_videos:
+                  description: Optional reference video clips (up to 5; each 2-15s, 30s combined; MP4/MOV, ≤50MB each) for editing, extension, and motion/identity guidance. Each item is a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). Billed on the INPUT duration at half the output per-second rate (80/sec at 480p, 160/sec at 720p, 375/sec at 1080p) in addition to the output — estimate via POST /v1/cost. Can't be combined with `image`/`end_image`.
+                  items:
+                    type: string
+                  maxItems: 5
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 480p
+                  - 720p
+                  - 1080p
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with SeeDance 2.5
+      tags:
+      - ByteDance (SeeDance)
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    CreateVideoResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

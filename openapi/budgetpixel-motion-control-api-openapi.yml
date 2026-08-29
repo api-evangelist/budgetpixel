@@ -1,0 +1,302 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Motion Control API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Motion Control across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- name: Motion Control
+paths:
+  /motion-control/{id}:
+    get:
+      description: 'Poll until `status` is `succeeded`. The generated video is returned as a
+
+        short-lived signed `video_url` (valid for several hours; re-call for a fresh
+
+        URL anytime — the underlying object is deleted 24h after generation).
+
+        '
+      operationId: getMotionControlJob
+      parameters:
+      - description: The opaque job id returned by the create endpoint (e.g. `mtn_...`).
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MotionJob'
+          description: Current job status. `video_url` is populated once succeeded.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      summary: Get motion control job status
+      tags:
+      - Motion Control
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /motion-control/dreamactor-m2.0:
+    post:
+      description: 'BytePlus DreamActor M2.0 — drives the character in an image to replicate the motion, facial expressions, and lip movements from a reference video, preserving the subject and background of the image. Works for real people, animation, and pets. 720p MP4 output. Priced per second of the reference video (50 credits/second).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/motion-control/{id}`](/api-reference/motion-control/get-motion-control-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createMotion_dreamactor_m2_0
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                image:
+                  description: Character image to animate (the subject). A public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. jpg/png, max 4.7 MB; 480x480 to 1920x1080 (larger images are scaled down).
+                  type: string
+                trim_intro:
+                  default: true
+                  description: Trim the 1-second transition at the start of the output video.
+                  type: boolean
+                video:
+                  description: Motion reference video whose movement drives the character. A public video URL or an uploaded-file URL from POST /v1/uploads. mp4/webm, 3-30 seconds, up to 30 MB.
+                  type: string
+              required:
+              - image
+              - video
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMotionResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Motion control with DreamActor M2.0
+      tags:
+      - Motion Control
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /motion-control/kling-3-motion-control-std:
+    post:
+      description: 'Kling 3.0 motion control (standard tier) — transfers the motion from a reference video onto a character image. Priced per second of the reference video (130 credits/second).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/motion-control/{id}`](/api-reference/motion-control/get-motion-control-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createMotion_kling_3_motion_control_std
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                character_orientation:
+                  default: video
+                  description: Take the character's orientation from the reference video or from the image. With "image", the reference video must be 10 seconds or less.
+                  enum:
+                  - video
+                  - image
+                  type: string
+                image:
+                  description: Character image to animate. A public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. jpg/png/webp.
+                  type: string
+                keep_original_sound:
+                  default: true
+                  description: Keep the original audio from the reference video.
+                  type: boolean
+                prompt:
+                  default: Replace the characters in the video with the characters from the image, while strictly maintaining the characters' movements.
+                  description: How the character should be animated.
+                  type: string
+                video:
+                  description: Motion reference video whose movement drives the character. A public video URL or an uploaded-file URL from POST /v1/uploads. mp4/webm, 3-30 seconds (max 10 seconds when character_orientation is "image"), up to 30 MB.
+                  type: string
+              required:
+              - image
+              - video
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMotionResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Motion control with Kling 3.0 Motion Control Standard
+      tags:
+      - Motion Control
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
+  schemas:
+    MotionJob:
+      properties:
+        completed_at:
+          format: date-time
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        error_message:
+          type: string
+        id:
+          type: string
+        model:
+          type: string
+        status:
+          description: Lifecycle state. `succeeded`/`failed`/`canceled` are terminal.
+          enum:
+          - pending
+          - processing
+          - succeeded
+          - failed
+          - canceled
+          type: string
+        video_url:
+          description: Short-lived presigned URL; present once `status=succeeded`.
+          format: uri
+          type: string
+      type: object
+    CreateMotionResponse:
+      properties:
+        credits:
+          description: Total price of this job (seconds x the model's per-second rate).
+          type: integer
+        id:
+          description: Opaque job id (`mtn_...`) — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        seconds:
+          description: Billed duration — the reference video's length
+          rounded up.: null
+          type: integer
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

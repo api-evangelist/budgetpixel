@@ -1,0 +1,303 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Lip Sync API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Lip Sync across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- name: Lip Sync
+paths:
+  /lip-sync/{id}:
+    get:
+      description: 'Poll until `status` is `succeeded`. The generated video is returned as a
+
+        short-lived signed `video_url` (valid for several hours; re-call for a fresh
+
+        URL anytime — the underlying object is deleted 24h after generation).
+
+        '
+      operationId: getLipSyncJob
+      parameters:
+      - description: The opaque job id returned by the create endpoint (e.g. `lip_...`).
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LipSyncJob'
+          description: Current job status. `video_url` is populated once succeeded.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      summary: Get lip sync job status
+      tags:
+      - Lip Sync
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /lip-sync/omni-human-1.5:
+    post:
+      description: 'BytePlus OmniHuman 1.5 — animates the person (or character/pet) in an image to speak the input audio with synchronized lips, facial expression, and body motion. Priced per second of the input audio, rounded UP to whole seconds (135 credits/second — e.g. a 12.4s clip bills as 13s).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/lip-sync/{id}`](/api-reference/lip-sync/get-lip-sync-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createLipSync_omni_human_1_5
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                audio:
+                  description: The speech/audio to lip-sync (mp3/wav, up to 60 seconds, max 5 MB). A public audio URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads.
+                  type: string
+                image:
+                  description: The subject to animate — a human face/portrait, character, or pet. A public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. jpg/png/webp.
+                  type: string
+                output_resolution:
+                  default: 1080
+                  description: Output resolution (same price for both).
+                  enum:
+                  - 720
+                  - 1080
+                  type: integer
+                prompt:
+                  description: Optional text prompt to guide the animation style or actions.
+                  type: string
+              required:
+              - image
+              - audio
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMotionResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Lip sync with OmniHuman 1.5
+      tags:
+      - Lip Sync
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /lip-sync/p-video-avatar:
+    post:
+      description: 'P-Video Avatar — a talking avatar from one image and a speech clip. Priced per second of the input audio, rounded UP to whole seconds, by output resolution: 40 credits/second at 720p, 60 credits/second at 1080p (e.g. a 12.4s clip at 1080p bills as 13s x 60).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/lip-sync/{id}`](/api-reference/lip-sync/get-lip-sync-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createLipSync_p_video_avatar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                audio:
+                  description: The speech/audio to lip-sync (mp3/wav, up to 30 seconds, max 5 MB). A public audio URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads.
+                  type: string
+                image:
+                  description: The avatar image (a person facing the camera works best). A public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. jpg/png/webp.
+                  type: string
+                resolution:
+                  default: 720p
+                  description: Output resolution — sets the per-second price (720p = 40, 1080p = 60 credits/second).
+                  enum:
+                  - 720p
+                  - 1080p
+                  type: string
+                video_prompt:
+                  description: Optional visual prompt describing how the person should appear or behave while speaking.
+                  type: string
+              required:
+              - image
+              - audio
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMotionResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Lip sync with P-Video Avatar
+      tags:
+      - Lip Sync
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
+  schemas:
+    LipSyncJob:
+      properties:
+        completed_at:
+          format: date-time
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        error_message:
+          type: string
+        id:
+          type: string
+        model:
+          type: string
+        status:
+          description: Lifecycle state. `succeeded`/`failed`/`canceled` are terminal.
+          enum:
+          - pending
+          - processing
+          - succeeded
+          - failed
+          - canceled
+          type: string
+        video_url:
+          description: Short-lived presigned URL; present once `status=succeeded`.
+          format: uri
+          type: string
+      type: object
+    CreateMotionResponse:
+      properties:
+        credits:
+          description: Total price of this job (seconds x the model's per-second rate).
+          type: integer
+        id:
+          description: Opaque job id (`mtn_...`) — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        seconds:
+          description: Billed duration — the reference video's length
+          rounded up.: null
+          type: integer
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

@@ -50,31 +50,73 @@ tags:
 - Model Aggregator
 - Agent Card
 apis:
-- name: BudgetPixel REST API
-  description: Unified REST API across image, video, music and sound-effect models with an asynchronous create-then-poll job
-    model, per-model endpoints (the path IS the model slug), a cost-quoting endpoint, input moderation with stable machine-readable
-    restriction reasons, format conversions and social publishing. 74 operations, OpenAPI 3.1.0. Private beta; requires a
-    Premium, Pro or Ultra plan and a Bearer bpx_live_* API key.
+- name: BudgetPixel MCP Server
+  description: >-
+    First-party hosted remote Model Context Protocol server (streamable HTTP, protocol 2025-06-18) giving
+    agents 12 tools to generate images, video, music and sound effects on the signed-in account, upscale
+    image and video, upload reference media, browse the live model catalogue and prices, read the credit
+    balance and generation history, and publish to the public community feed. OAuth 2.1 + PKCE with Google
+    SSO and dynamic client registration; no API key. Catalogue browsing is open to any account, generation
+    requires Premium, Pro or Ultra.
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
+  - Agent-Native
+  - MCP
+  - MCP Server
+  - AI
+  - Generative Media
+  - Image Models
+  - Video Models
+  - Music/Audio Generation
+  - Creative Tools
+  properties:
+  - type: MCPServer
+    url: https://mcp.budgetpixel.com/mcp
+    description: >-
+      PRODUCT MCP, live: 12 tools (generate_image, generate_video, generate_music, generate_sound_effect,
+      upscale_image, upscale_video, check_generation_status, get_credit_balance...). Streamable HTTP with
+      a session handshake -- tools/list without a prior initialize returns 400 "No session ID and not
+      an initialize request", which reads as broken but is correct protocol. Verified 2026-08-28.
+  - type: MCPServer
+    url: mcp/budgetpixel-mcp.yml
+  - type: ToolCrosswalk
+    url: mcp/budgetpixel-tool-crosswalk.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/mcp-server
+  - type: OAuthScopes
+    url: scopes/budgetpixel-scopes.yml
+  - type: SourceCode
+    url: https://github.com/budgetpixel-ai/budgetpixel-mcp
+- name: BudgetPixel Docs Search MCP Server
+  description: >-
+    Read-only MCP server hosted on the BudgetPixel documentation site (Mintlify) giving agents two tools
+    -- full-text documentation search and a sandboxed read-only filesystem query over the docs pages and
+    the OpenAPI spec. Answers tools/list anonymously; useful alongside the REST API so an agent can answer
+    its own integration questions.
+  humanURL: https://docs.budgetpixel.com/introduction
+  baseURL: https://docs.budgetpixel.com/mcp
+  tags:
+  - Agent-Native
+  - MCP
+  - MCP Server
+  - AI
+  - Documentation
+  properties:
+  - type: MCPServer
+    url: https://docs.budgetpixel.com/mcp
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+- aid: budgetpixel:budgetpixel-account-api
+  name: BudgetPixel Account API
+  description: Account and credit balance
   humanURL: https://budgetpixel.com/api
   baseURL: https://api.budgetpixel.com/v1
   tags:
-  - Generative AI
-  - AI Image Generation
-  - AI Video Generation
-  - AI Music Generation
-  - Audio Generation
-  - Content Moderation
-  - Creative Tools
-  - Media Processing
-  - Generative Media
-  - Upscaling
+  - Account
   properties:
   - type: OpenAPI
-    url: openapi/budgetpixel-openapi.yaml
-  - type: OpenAPI
-    url: https://api.budgetpixel.com/openapi.yaml
-  - type: Overlay
-    url: overlays/budgetpixel-openapi-overlay.yaml
+    url: openapi/budgetpixel-account-api-openapi.yml
   - type: Documentation
     url: https://docs.budgetpixel.com/introduction
   - type: APIReference
@@ -93,58 +135,678 @@ apis:
     url: conventions/budgetpixel-conventions.yml
   - type: LLMsTxt
     url: https://docs.budgetpixel.com/llms.txt
-- name: BudgetPixel MCP Server
-  description: First-party hosted remote Model Context Protocol server (streamable HTTP, protocol 2025-06-18) giving agents
-    12 tools to generate images, video, music and sound effects on the signed-in account, upscale image and video, upload
-    reference media, browse the live model catalogue and prices, read the credit balance and generation history, and publish
-    to the public community feed. OAuth 2.1 + PKCE with Google SSO and dynamic client registration; no API key. Catalogue
-    browsing is open to any account, generation requires Premium, Pro or Ultra.
-  humanURL: https://budgetpixel.com/mcp
-  baseURL: https://mcp.budgetpixel.com/mcp
+- aid: budgetpixel:budgetpixel-alibaba-api
+  name: BudgetPixel Alibaba API
+  description: The Alibaba API from BudgetPixel — 12 operation(s) for alibaba.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
   tags:
-  - Agent-Native
-  - MCP
-  - MCP Server
-  - AI
-  - Generative Media
-  - Image Models
-  - Video Models
-  - Music/Audio Generation
-  - Creative Tools
+  - Alibaba
   properties:
-  - type: MCPServer
-    url: https://mcp.budgetpixel.com/mcp
-    description: 'PRODUCT MCP, live: 12 tools (generate_image, generate_video, generate_music, generate_sound_effect, upscale_image,
-      upscale_video, check_generation_status, get_credit_balance...). Streamable HTTP with a session handshake -- tools/list
-      without a prior initialize returns 400 "No session ID and not an initialize request", which reads as broken but is correct
-      protocol. Verified 2026-08-28.'
-  - type: MCPServer
-    url: mcp/budgetpixel-mcp.yml
-  - type: ToolCrosswalk
-    url: mcp/budgetpixel-tool-crosswalk.yml
-  - type: Documentation
-    url: https://docs.budgetpixel.com/mcp-server
-  - type: OAuthScopes
-    url: scopes/budgetpixel-scopes.yml
-  - type: SourceCode
-    url: https://github.com/budgetpixel-ai/budgetpixel-mcp
-- name: BudgetPixel Docs Search MCP Server
-  description: Read-only MCP server hosted on the BudgetPixel documentation site (Mintlify) giving agents two tools -- full-text
-    documentation search and a sandboxed read-only filesystem query over the docs pages and the OpenAPI spec. Answers tools/list
-    anonymously; useful alongside the REST API so an agent can answer its own integration questions.
-  humanURL: https://docs.budgetpixel.com/introduction
-  baseURL: https://docs.budgetpixel.com/mcp
-  tags:
-  - Agent-Native
-  - MCP
-  - MCP Server
-  - AI
-  - Documentation
-  properties:
-  - type: MCPServer
-    url: https://docs.budgetpixel.com/mcp
+  - type: OpenAPI
+    url: openapi/budgetpixel-alibaba-api-openapi.yml
   - type: Documentation
     url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-audios-api
+  name: BudgetPixel Audios API
+  description: Music and sound-effect job status
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Audios
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-audios-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-black-forest-labs-api
+  name: BudgetPixel Black Forest Labs API
+  description: FLUX image models
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Black Forest Labs
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-black-forest-labs-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-bytedance-api
+  name: BudgetPixel Bytedance API
+  description: SeeDream image models
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Bytedance
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-bytedance-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-bytedance-seedance-api
+  name: BudgetPixel ByteDance (SeeDance) API
+  description: SeeDance video models
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - ByteDance (SeeDance)
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-bytedance-seedance-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-classification-api
+  name: BudgetPixel Classification API
+  description: Content classification — music genre detection
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Classification
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-classification-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-conversions-api
+  name: BudgetPixel Conversions API
+  description: Format conversion for images, video, and audio
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Conversions
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-conversions-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-google-api
+  name: BudgetPixel Google API
+  description: The Google API from BudgetPixel — 3 operation(s) for google.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Google
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-google-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-images-api
+  name: BudgetPixel Images API
+  description: Image job status
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Images
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-images-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-kling-api
+  name: BudgetPixel Kling API
+  description: Kuaishou Kling video models
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Kling
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-kling-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-lip-sync-api
+  name: BudgetPixel Lip Sync API
+  description: The Lip Sync API from BudgetPixel — 3 operation(s) for lip sync.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Lip Sync
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-lip-sync-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-minimax-api
+  name: BudgetPixel Mini Max API
+  description: The MiniMax API from BudgetPixel — 1 operation(s) for minimax.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - MiniMax
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-minimax-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-models-api
+  name: BudgetPixel Models API
+  description: Discover available models and pricing
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Models
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-models-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-moderation-api
+  name: BudgetPixel Moderation API
+  description: Content moderation — NSFW rating and CSAM detection
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Moderation
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-moderation-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-motion-control-api
+  name: BudgetPixel Motion Control API
+  description: The Motion Control API from BudgetPixel — 3 operation(s) for motion control.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Motion Control
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-motion-control-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-music-api
+  name: BudgetPixel Music API
+  description: Music generation models
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Music
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-music-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-openai-api
+  name: BudgetPixel Open AI API
+  description: The OpenAI API from BudgetPixel — 1 operation(s) for openai.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - OpenAI
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-openai-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-pruna-ai-api
+  name: BudgetPixel Pruna AI API
+  description: The Pruna AI API from BudgetPixel — 3 operation(s) for pruna ai.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Pruna AI
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-pruna-ai-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-social-api
+  name: BudgetPixel Social API
+  description: Publish posts to your BudgetPixel feed
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Social
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-social-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-sound-effects-api
+  name: BudgetPixel Sound Effects API
+  description: Text-to-sound-effect models (priced per second)
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Sound Effects
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-sound-effects-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-uploads-api
+  name: BudgetPixel Uploads API
+  description: Upload input media for image/video generation
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Uploads
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-uploads-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-upscaling-api
+  name: BudgetPixel Upscaling API
+  description: The Upscaling API from BudgetPixel — 5 operation(s) for upscaling.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Upscaling
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-upscaling-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-videos-api
+  name: BudgetPixel Videos API
+  description: Video job status
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - Videos
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-videos-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-xai-api
+  name: BudgetPixel X AI API
+  description: The xAI API from BudgetPixel — 2 operation(s) for xai.
+  humanURL: https://budgetpixel.com/api
+  baseURL: https://api.budgetpixel.com/v1
+  tags:
+  - xAI
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-xai-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
 maintainers:
 - FN: BudgetPixel
   email: support@budgetpixel.com

@@ -1,0 +1,365 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Bytedance API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Bytedance across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: SeeDream image models
+  name: Bytedance
+paths:
+  /images/seedream-4.5:
+    post:
+      description: 'ByteDance SeeDream 4.5 — text-to-image, plus image editing and multi-reference composition from up to 9 reference images. Strong aesthetics, 2K/4K output.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_seedream_4_5
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '16:9'
+                  - '9:16'
+                  - '2:3'
+                  - '3:2'
+                  - '21:9'
+                  - '9:21'
+                  type: string
+                max_images:
+                  default: 1
+                  description: 'Ceiling for grouped generation when sequential_image_generation is "auto": the model returns up to this many related images and decides the exact count (not guaranteed to be exactly this many). You are billed per image returned.'
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                sequential_image_generation:
+                  default: disabled
+                  description: Set to "auto" to return a group of related images (up to max_images); "disabled" (default) returns a single image.
+                  enum:
+                  - disabled
+                  - auto
+                  type: string
+                size:
+                  default: 2K
+                  description: Output resolution.
+                  enum:
+                  - 2K
+                  - 4K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with SeeDream 4.5
+      tags:
+      - Bytedance
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/seedream-5.0-lite:
+    post:
+      description: 'ByteDance SeeDream 5.0 Lite — fast unified text-to-image and image editing with multi-reference composition from up to 9 reference images, 2K/3K output, and grouped sequential generation.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_seedream_5_0_lite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '16:9'
+                  - '9:16'
+                  - '2:3'
+                  - '3:2'
+                  - '21:9'
+                  - '9:21'
+                  type: string
+                max_images:
+                  default: 1
+                  description: 'Ceiling for grouped generation when sequential_image_generation is "auto": the model returns up to this many related images and decides the exact count (not guaranteed to be exactly this many). You are billed per image returned.'
+                  maximum: 14
+                  minimum: 1
+                  type: integer
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                sequential_image_generation:
+                  default: disabled
+                  description: Set to "auto" to return a group of related images (up to max_images); "disabled" (default) returns a single image.
+                  enum:
+                  - disabled
+                  - auto
+                  type: string
+                size:
+                  default: 2K
+                  description: Output resolution.
+                  enum:
+                  - 2K
+                  - 3K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with SeeDream 5.0 Lite
+      tags:
+      - Bytedance
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/seedream-5.0-pro:
+    post:
+      description: 'ByteDance SeeDream 5.0 Pro — precise image editing with full layer control. Text-to-image, instruction-based editing, and multi-reference composition from up to 9 reference images with 1K/2K output. Billing: 55 credits per image at 1K, 110 at 2K; input images bill 5 credits each after the first (first is free). No grouped/sequential generation.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_seedream_5_0_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '16:9'
+                  - '9:16'
+                  - '2:3'
+                  - '3:2'
+                  - '21:9'
+                  - '9:21'
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. The first input image is free; each additional one bills 5 credits per generated image.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                size:
+                  default: 1K
+                  description: Output resolution. 1K bills 55 credits per image; 2K bills 110.
+                  enum:
+                  - 1K
+                  - 2K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with SeeDream 5.0 Pro
+      tags:
+      - Bytedance
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml

@@ -1,0 +1,674 @@
+openapi: 3.2.0
+info:
+  title: Budgetpixel Kling API
+  version: '2026-06-20'
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'Operations tagged Kling across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Kuaishou Kling video models
+  name: Kling
+paths:
+  /images/kling-v3:
+    post:
+      description: 'Kling AI v3 — image generation with strong prompt adherence and aesthetics. Text-to-image and single-reference-image generation at 1K/2K. Billing: 35 credits per image.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_kling_v3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  type: string
+                image:
+                  description: Optional reference image the generation should follow (subject/feature reference). Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
+                  type: string
+                negative_prompt:
+                  description: What to avoid in the generated image. Text-to-image only — ignored when "image" is provided.
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                size:
+                  default: 2K
+                  description: Output resolution tier.
+                  enum:
+                  - 1K
+                  - 2K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Kling v3
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /images/kling-v3-omni:
+    post:
+      description: 'Kling AI v3 Omni — unified text-to-image and image editing with multi-reference composition from up to 9 reference images and up to 4K output. Billing: 35 credits per image at 1K/2K, 60 at 4K.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+      operationId: createImage_kling_v3_omni
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '21:9'
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 9) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
+                  items:
+                    type: string
+                  maxItems: 9
+                  type: array
+                size:
+                  default: 2K
+                  description: Output resolution tier. 1K/2K bill 35 credits per image; 4K bills 60.
+                  enum:
+                  - 1K
+                  - 2K
+                  - 4K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with Kling v3 Omni
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/kling-3.0-turbo:
+    post:
+      description: 'Kuaishou Kling 3.0 Turbo — fast text-to-video and image-to-video (start frame only) with native audio always included. 720p or 1080p, priced per resolution (see `resolution_pricing` in GET /v1/models). Any duration from 3 to 15 seconds.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_kling_3_0_turbo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when a start image already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  type: string
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (3–15).
+                  maximum: 15
+                  minimum: 3
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 720p
+                  - 1080p
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Kling 3.0 Turbo
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/kling-v2.6-pro:
+    post:
+      description: 'Kuaishou Kling v2.6 Pro — text-to-video, plus image-to-video with a start frame and an optional end frame. Optional audio.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_kling_v2_6_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds.
+                  enum:
+                  - 5
+                  - 10
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Kling v2.6 Pro
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/kling-v3-omni-video:
+    post:
+      description: 'Kuaishou Kling V3 Omni — text-to-video; image-to-video (start + optional end frame); reference-images-to-video (up to 7 images); and video-to-video editing (supply a `video`). 720p / 1080p / 4K, priced per resolution and per audio (see `resolution_pricing` in GET /v1/models and POST /v1/cost). Video-edit carries its own per-second rate and never has audio (the model forces sound off with an input video).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_kling_v3_omni_video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when an input image or video already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video. Raises the 720p/1080p per-second rate (no price impact at 4K); unavailable on video-edit.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with `reference_images`.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (3–15). For video-edit, set this to the input video's rounded duration.
+                  maximum: 15
+                  minimum: 3
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+                reference_images:
+                  description: Optional reference images that guide the generated video. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image` (start/end frames). Up to 7 on their own (reference-images-to-video); up to 4 when accompanying a `video` edit.
+                  items:
+                    type: string
+                  maxItems: 7
+                  type: array
+                resolution:
+                  default: 720p
+                  description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
+                  enum:
+                  - 720p
+                  - 1080p
+                  - 4k
+                  type: string
+                video:
+                  description: 'Optional input video for video-to-video editing. Provide a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). When set, the request runs in video-edit mode: up to 4 `reference_images` may guide the edit, start/end frames are not supported, audio is always off, and the output length matches the input video — set `length_seconds` to the input''s duration rounded to whole seconds (3–15), which is what billing uses.'
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Kling V3 Omni
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/kling-v3.0-4k:
+    post:
+      description: 'Kuaishou Kling 3.0 at native 4K resolution — text-to-video, plus image-to-video with a start frame and an optional end frame. Any duration from 3 to 15 seconds. Optional audio (no price impact at 4K).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_kling_v3_0_4k
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when a start image already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video. Raises the per-second rate on Standard/Pro (no price impact at 4K) — estimate via POST /v1/cost.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (3–15).
+                  maximum: 15
+                  minimum: 3
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Kling 3.0 4K
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/kling-v3.0-pro:
+    post:
+      description: 'Kuaishou Kling 3.0 in Professional mode (1080p) — text-to-video, plus image-to-video with a start frame and an optional end frame. Any duration from 3 to 15 seconds. Optional audio (raises the per-second rate — estimate via POST /v1/cost).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_kling_v3_0_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when a start image already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video. Raises the per-second rate on Standard/Pro (no price impact at 4K) — estimate via POST /v1/cost.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (3–15).
+                  maximum: 15
+                  minimum: 3
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Kling 3.0 Pro
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+  /videos/kling-v3.0-standard:
+    post:
+      description: 'Kuaishou Kling 3.0 in Standard mode (720p) — text-to-video, plus image-to-video with a start frame and an optional end frame. Any duration from 3 to 15 seconds. Optional audio (raises the per-second rate — estimate via POST /v1/cost).
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/videos/{id}`](/api-reference/videos/get-video-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+      operationId: createVideo_kling_v3_0_standard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio. Ignored when a start image already sets the frame.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  type: string
+                end_image:
+                  description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
+                  type: string
+                generate_audio:
+                  description: Generate audio with the video. Raises the per-second rate on Standard/Pro (no price impact at 4K) — estimate via POST /v1/cost.
+                  type: boolean
+                image:
+                  description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
+                  type: string
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds (3–15).
+                  maximum: 15
+                  minimum: 3
+                  type: integer
+                prompt:
+                  description: Text description of the video.
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with Kling 3.0 Standard
+      tags:
+      - Kling
+    servers:
+    - description: Production
+      url: https://api.budgetpixel.com/v1
+components:
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+  schemas:
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    CreateVideoResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http
+x-refined-from:
+- budgetpixel-openapi.yaml
+- budgetpixel-openapi.yaml
