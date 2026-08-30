@@ -33,6 +33,31 @@ tags:
 - Content Moderation
 - Creative Tools
 - Design
+- agent-native
+- MCP
+- MCP Server
+- Artificial Intelligence
+- Image Models
+- Video Models
+- Music/Audio Generation
+- Generative Media
+- llms-txt
+- Media Processing
+- Text-to-Image
+- Text-to-Video
+- Upscaling
+- Credits
+- Model Aggregator
+- Agent Card
+tags_raw:
+- Generative AI
+- AI Image Generation
+- AI Video Generation
+- AI Music Generation
+- Audio Generation
+- Content Moderation
+- Creative Tools
+- Design
 - Agent-Native
 - MCP
 - MCP Server
@@ -61,6 +86,16 @@ apis:
   humanURL: https://budgetpixel.com/mcp
   baseURL: https://mcp.budgetpixel.com/mcp
   tags:
+  - agent-native
+  - MCP
+  - MCP Server
+  - Artificial Intelligence
+  - Generative Media
+  - Image Models
+  - Video Models
+  - Music/Audio Generation
+  - Creative Tools
+  tags_raw:
   - Agent-Native
   - MCP
   - MCP Server
@@ -97,6 +132,12 @@ apis:
   humanURL: https://docs.budgetpixel.com/introduction
   baseURL: https://docs.budgetpixel.com/mcp
   tags:
+  - agent-native
+  - MCP
+  - MCP Server
+  - Artificial Intelligence
+  - Documentation
+  tags_raw:
   - Agent-Native
   - MCP
   - MCP Server
@@ -225,6 +266,8 @@ apis:
   humanURL: https://budgetpixel.com/api
   baseURL: https://api.budgetpixel.com/v1
   tags:
+  - ByteDance
+  tags_raw:
   - Bytedance
   properties:
   - type: OpenAPI
@@ -365,6 +408,8 @@ apis:
   humanURL: https://budgetpixel.com/api
   baseURL: https://api.budgetpixel.com/v1
   tags:
+  - Image
+  tags_raw:
   - Images
   properties:
   - type: OpenAPI
