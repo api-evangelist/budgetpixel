@@ -76,13 +76,11 @@ tags_raw:
 - Agent Card
 apis:
 - name: BudgetPixel MCP Server
-  description: >-
-    First-party hosted remote Model Context Protocol server (streamable HTTP, protocol 2025-06-18) giving
-    agents 12 tools to generate images, video, music and sound effects on the signed-in account, upscale
-    image and video, upload reference media, browse the live model catalogue and prices, read the credit
-    balance and generation history, and publish to the public community feed. OAuth 2.1 + PKCE with Google
-    SSO and dynamic client registration; no API key. Catalogue browsing is open to any account, generation
-    requires Premium, Pro or Ultra.
+  description: First-party hosted remote Model Context Protocol server (streamable HTTP, protocol 2025-06-18) giving agents
+    12 tools to generate images, video, music and sound effects on the signed-in account, upscale image and video, upload
+    reference media, browse the live model catalogue and prices, read the credit balance and generation history, and publish
+    to the public community feed. OAuth 2.1 + PKCE with Google SSO and dynamic client registration; no API key. Catalogue
+    browsing is open to any account, generation requires Premium, Pro or Ultra.
   humanURL: https://budgetpixel.com/mcp
   baseURL: https://mcp.budgetpixel.com/mcp
   tags:
@@ -108,11 +106,10 @@ apis:
   properties:
   - type: MCPServer
     url: https://mcp.budgetpixel.com/mcp
-    description: >-
-      PRODUCT MCP, live: 12 tools (generate_image, generate_video, generate_music, generate_sound_effect,
-      upscale_image, upscale_video, check_generation_status, get_credit_balance...). Streamable HTTP with
-      a session handshake -- tools/list without a prior initialize returns 400 "No session ID and not
-      an initialize request", which reads as broken but is correct protocol. Verified 2026-08-28.
+    description: 'PRODUCT MCP, live: 12 tools (generate_image, generate_video, generate_music, generate_sound_effect, upscale_image,
+      upscale_video, check_generation_status, get_credit_balance...). Streamable HTTP with a session handshake -- tools/list
+      without a prior initialize returns 400 "No session ID and not an initialize request", which reads as broken but is correct
+      protocol. Verified 2026-08-28.'
   - type: MCPServer
     url: mcp/budgetpixel-mcp.yml
   - type: ToolCrosswalk
@@ -124,11 +121,9 @@ apis:
   - type: SourceCode
     url: https://github.com/budgetpixel-ai/budgetpixel-mcp
 - name: BudgetPixel Docs Search MCP Server
-  description: >-
-    Read-only MCP server hosted on the BudgetPixel documentation site (Mintlify) giving agents two tools
-    -- full-text documentation search and a sandboxed read-only filesystem query over the docs pages and
-    the OpenAPI spec. Answers tools/list anonymously; useful alongside the REST API so an agent can answer
-    its own integration questions.
+  description: Read-only MCP server hosted on the BudgetPixel documentation site (Mintlify) giving agents two tools -- full-text
+    documentation search and a sandboxed read-only filesystem query over the docs pages and the OpenAPI spec. Answers tools/list
+    anonymously; useful alongside the REST API so an agent can answer its own integration questions.
   humanURL: https://docs.budgetpixel.com/introduction
   baseURL: https://docs.budgetpixel.com/mcp
   tags:
@@ -146,6 +141,9 @@ apis:
   properties:
   - type: MCPServer
     url: https://docs.budgetpixel.com/mcp
+    description: Mintlify DOCUMENTATION-SEARCH MCP (search_budget_pixel_api, query_docs_filesystem_budget_pixel_api, submit_feedback)
+      -- not the generation API. Distinct from the product MCP at mcp.budgetpixel.com/mcp, which serves 12 generation tools.
+      Verified 2026-08-28.
   - type: Documentation
     url: https://docs.budgetpixel.com/introduction
 - aid: budgetpixel:budgetpixel-account-api
