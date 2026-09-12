@@ -876,6 +876,8 @@ generated:
   confidence: 90
   at: '2026-08-28T02:54:24.589Z'
 common:
+- type: Website
+  url: https://www.budgetpixel.com/
 - type: License
   name: MIT
   url: https://github.com/budgetpixel-ai/budgetpixel-mcp/blob/main/LICENSE
