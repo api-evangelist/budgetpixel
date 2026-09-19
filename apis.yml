@@ -62,7 +62,7 @@ tags:
 - Text-to-Image
 - Text-to-Video
 - Upscaling
-- Credits
+- Credit
 - Model Aggregator
 - Agent Card
 tags_raw:
@@ -372,6 +372,8 @@ apis:
   humanURL: https://budgetpixel.com/api
   baseURL: https://api.budgetpixel.com/v1
   tags:
+  - Conversion
+  tags_raw:
   - Conversions
   properties:
   - type: OpenAPI
@@ -794,6 +796,8 @@ apis:
   humanURL: https://budgetpixel.com/api
   baseURL: https://api.budgetpixel.com/v1
   tags:
+  - Video
+  tags_raw:
   - Videos
   properties:
   - type: OpenAPI
@@ -850,6 +854,8 @@ apis:
   humanURL: https://budgetpixel.com/mcp
   baseURL: https://mcp.budgetpixel.com/mcp
   tags:
+  - MiniMax
+  tags_raw:
   - Mini Max
   properties:
   - type: OpenAPI
