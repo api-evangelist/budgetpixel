@@ -40,6 +40,9 @@ accessModel:
 created: '2026-08-28'
 modified: '2026-08-28'
 specificationVersion: '0.21'
+x-docs-platform: mintlify
+x-docs-platform-confidence: medium
+x-docs-platform-checked: 2026-09-21
 tags:
 - Generative AI
 - AI Image Generation
