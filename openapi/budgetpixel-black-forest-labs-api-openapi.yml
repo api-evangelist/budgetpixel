@@ -1,11 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Budgetpixel Black Forest Labs API
-  version: '2026-06-20'
   contact:
     email: support@budgetpixel.com
     name: BudgetPixel Support
-  description: 'Operations tagged Black Forest Labs across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.'
+  title: BudgetPixel Black Forest Labs API
+  version: '2026-06-20'
 servers:
 - description: Production
   url: https://api.budgetpixel.com/v1
@@ -20,7 +22,7 @@ paths:
       description: 'Black Forest Labs FLUX 1.1 Pro — fast, high-quality generation with enhanced prompt adherence. Text-to-image and single-image editing.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
       operationId: createImage_flux_1_1_pro
       requestBody:
         content:
@@ -78,15 +80,12 @@ paths:
       summary: Generate image with FLUX 1.1 Pro
       tags:
       - Black Forest Labs
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /images/flux-2-dev:
     post:
       description: 'Black Forest Labs FLUX 2 Dev — next-generation FLUX quality with multi-reference image editing (up to 4 reference images) and seed control.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
       operationId: createImage_flux_2_dev
       requestBody:
         content:
@@ -145,15 +144,12 @@ paths:
       summary: Generate image with FLUX 2 Dev
       tags:
       - Black Forest Labs
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /images/flux-2-klein:
     post:
       description: 'Black Forest Labs FLUX.2 Klein — sub-second generation with excellent prompt adherence. Text-to-image and image editing with up to 3 reference images, megapixel-based resolution, and seed control.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
       operationId: createImage_flux_2_klein
       requestBody:
         content:
@@ -226,15 +222,12 @@ paths:
       summary: Generate image with FLUX 2 Klein
       tags:
       - Black Forest Labs
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /images/flux-2-pro:
     post:
       description: 'Black Forest Labs FLUX 2 Pro — premium quality with megapixel-based resolution and seed control.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll [`GET /v1/images/{id}`](/api-reference/images/get-image-job-status) until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
       operationId: createImage_flux_2_pro
       requestBody:
         content:
@@ -299,10 +292,73 @@ paths:
       summary: Generate image with FLUX 2 Pro
       tags:
       - Black Forest Labs
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
 components:
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
   responses:
     Forbidden:
       content:
@@ -330,78 +386,9 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: Missing or invalid API key.
-  schemas:
-    CreateImageResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          example: img_a1b2c3d4e5f6
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-    ModerationBlocked:
-      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
-      properties:
-        error:
-          description: Human-readable explanation of the block.
-          type: string
-        restriction_reason:
-          description: Stable machine-readable block reason.
-          enum:
-          - input_csam
-          - input_explicit_adult
-          - input_upload_nudity
-          - input_celebrity_likeness
-          - strict_model_nsfw
-          type: string
-      required:
-      - error
-      - restriction_reason
-      type: object
-    JobStatus:
-      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
-      enum:
-      - pending
-      - starting
-      - processing
-      - completing
-      - succeeded
-      - failed
-      - timeout
-      type: string
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
       description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
       scheme: bearer
       type: http
-x-refined-from:
-- budgetpixel-openapi.yaml
-- budgetpixel-openapi.yaml

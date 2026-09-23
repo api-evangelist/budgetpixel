@@ -1,11 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Budgetpixel Account API
-  version: '2026-06-20'
   contact:
     email: support@budgetpixel.com
     name: BudgetPixel Support
-  description: 'Operations tagged Account across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.'
+  title: BudgetPixel Account API
+  version: '2026-06-20'
 servers:
 - description: Production
   url: https://api.budgetpixel.com/v1
@@ -30,33 +32,8 @@ paths:
       summary: Get credit balance
       tags:
       - Account
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
 components:
-  responses:
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   schemas:
-    CreditBalance:
-      properties:
-        extra_credits:
-          description: Purchased credits that don't reset monthly.
-          type: integer
-        monthly_limit:
-          type: integer
-        monthly_remaining:
-          type: integer
-        monthly_used:
-          type: integer
-        total_available:
-          description: Total spendable credits (monthly remaining + extra).
-          type: integer
-      type: object
     Error:
       properties:
         error:
@@ -79,12 +56,31 @@ components:
       required:
       - error
       type: object
+    CreditBalance:
+      properties:
+        extra_credits:
+          description: Purchased credits that don't reset monthly.
+          type: integer
+        monthly_limit:
+          type: integer
+        monthly_remaining:
+          type: integer
+        monthly_used:
+          type: integer
+        total_available:
+          description: Total spendable credits (monthly remaining + extra).
+          type: integer
+      type: object
+  responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
       description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
       scheme: bearer
       type: http
-x-refined-from:
-- budgetpixel-openapi.yaml
-- budgetpixel-openapi.yaml

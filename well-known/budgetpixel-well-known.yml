@@ -13,7 +13,7 @@ hosts:
   documents:
   - path: /.well-known/ai-plugin.json
     status: 200
-    file: well-known/budgetpixel-ai-plugin.json
+    file: budgetpixel-ai-plugin.json
     content_type: application/json
     note: OpenAI plugin manifest v1; auth type none; declares api.url https://budgetpixel.com/api/openapi.json
       which returns 404 (SPA shell) -- a dead pointer in the provider own manifest
@@ -101,13 +101,13 @@ hosts:
   documents:
   - path: /.well-known/oauth-authorization-server
     status: 200
-    file: well-known/budgetpixel-oauth-authorization-server.json
+    file: budgetpixel-oauth-authorization-server.json
     content_type: application/json
     note: RFC 8414 authorization server metadata; PKCE S256, dynamic client registration, scopes openid
       + profile
   - path: /.well-known/oauth-protected-resource
     status: 200
-    file: well-known/budgetpixel-oauth-protected-resource.json
+    file: budgetpixel-oauth-protected-resource.json
     content_type: application/json
     note: RFC 9728 protected resource metadata for the MCP endpoint
   - path: /.well-known/security.txt

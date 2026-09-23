@@ -1,11 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Budgetpixel Motion Control API
-  version: '2026-06-20'
   contact:
     email: support@budgetpixel.com
     name: BudgetPixel Support
-  description: 'Operations tagged Motion Control across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.'
+  title: BudgetPixel Motion Control API
+  version: '2026-06-20'
 servers:
 - description: Production
   url: https://api.budgetpixel.com/v1
@@ -20,9 +22,7 @@ paths:
 
         short-lived signed `video_url` (valid for several hours; re-call for a fresh
 
-        URL anytime — the underlying object is deleted 24h after generation).
-
-        '
+        URL anytime — the underlying object is deleted 24h after generation).'
       operationId: getMotionControlJob
       parameters:
       - description: The opaque job id returned by the create endpoint (e.g. `mtn_...`).
@@ -47,15 +47,12 @@ paths:
       summary: Get motion control job status
       tags:
       - Motion Control
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /motion-control/dreamactor-m2.0:
     post:
       description: 'BytePlus DreamActor M2.0 — drives the character in an image to replicate the motion, facial expressions, and lip movements from a reference video, preserving the subject and background of the image. Works for real people, animation, and pets. 720p MP4 output. Priced per second of the reference video (50 credits/second).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/motion-control/{id}`](/api-reference/motion-control/get-motion-control-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/motion-control/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
       operationId: createMotion_dreamactor_m2_0
       requestBody:
         content:
@@ -95,15 +92,12 @@ paths:
       summary: Motion control with DreamActor M2.0
       tags:
       - Motion Control
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /motion-control/kling-3-motion-control-std:
     post:
       description: 'Kling 3.0 motion control (standard tier) — transfers the motion from a reference video onto a character image. Priced per second of the reference video (130 credits/second).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll [`GET /v1/motion-control/{id}`](/api-reference/motion-control/get-motion-control-job-status) until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/motion-control/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
       operationId: createMotion_kling_3_motion_control_std
       requestBody:
         content:
@@ -154,43 +148,7 @@ paths:
       summary: Motion control with Kling 3.0 Motion Control Standard
       tags:
       - Motion Control
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
 components:
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
   schemas:
     MotionJob:
       properties:
@@ -220,25 +178,6 @@ components:
           format: uri
           type: string
       type: object
-    CreateMotionResponse:
-      properties:
-        credits:
-          description: Total price of this job (seconds x the model's per-second rate).
-          type: integer
-        id:
-          description: Opaque job id (`mtn_...`) — use it to poll status.
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        seconds:
-          description: Billed duration — the reference video's length
-          rounded up.: null
-          type: integer
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
       properties:
@@ -258,17 +197,6 @@ components:
       - error
       - restriction_reason
       type: object
-    JobStatus:
-      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
-      enum:
-      - pending
-      - starting
-      - processing
-      - completing
-      - succeeded
-      - failed
-      - timeout
-      type: string
     Error:
       properties:
         error:
@@ -291,12 +219,72 @@ components:
       required:
       - error
       type: object
+    CreateMotionResponse:
+      properties:
+        credits:
+          description: Total price of this job (seconds x the model's per-second rate).
+          type: integer
+        id:
+          description: Opaque job id (`mtn_...`) — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        seconds:
+          description: Billed duration — the reference video's length
+          rounded up.: null
+          type: integer
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
       description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
       scheme: bearer
       type: http
-x-refined-from:
-- budgetpixel-openapi.yaml
-- budgetpixel-openapi.yaml

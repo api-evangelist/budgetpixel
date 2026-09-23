@@ -1,11 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Budgetpixel Classification API
-  version: '2026-06-20'
   contact:
     email: support@budgetpixel.com
     name: BudgetPixel Support
-  description: 'Operations tagged Classification across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.'
+  title: BudgetPixel Classification API
+  version: '2026-06-20'
 servers:
 - description: Production
   url: https://api.budgetpixel.com/v1
@@ -28,7 +30,7 @@ paths:
 
         OGG, M4A, or FLAC. Accepts a public URL, an uploaded-file URL from
 
-        [`POST /v1/uploads`](/api-reference/files/upload-input-media), a data URI, or
+        `POST /v1/uploads`, a data URI, or
 
         raw base64. Tip: a 7-minute WAV exceeds 20 MB — use MP3 for long tracks.
 
@@ -42,13 +44,11 @@ paths:
 
         **Pricing: flat 10 credits per song.** Estimate via
 
-        [`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with
+        `POST /v1/cost` with
 
         `{"model": "music-genre"}`. Charged on success only — a classifier failure
 
-        costs nothing.
-
-        '
+        costs nothing.'
       operationId: classifyMusicGenre
       requestBody:
         content:
@@ -115,31 +115,7 @@ paths:
       summary: Classify a song's music genre
       tags:
       - Classification
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
 components:
-  responses:
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   schemas:
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
@@ -182,12 +158,30 @@ components:
       required:
       - error
       type: object
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
       description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
       scheme: bearer
       type: http
-x-refined-from:
-- budgetpixel-openapi.yaml
-- budgetpixel-openapi.yaml

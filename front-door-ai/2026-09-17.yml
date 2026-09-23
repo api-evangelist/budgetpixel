@@ -1,0 +1,32 @@
+# Front Door AI Index — budgetpixel — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: budgetpixel
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: www.budgetpixel.com
+  final_host: budgetpixel.com
+  ownership: own
+  owner: budgetpixel
+  shares_host_with: null
+  inherited_from: null
+  verdict: scored
+  score: 46
+  host_score: 46
+  density: 18.29
+  words: 2515
+  tiers:
+    agentic: 20
+    core: 14
+    model: 12
+  ambiguous: 4
+  top_terms:
+    prompts: 16
+    AI: 14
+    Claude: 4
+    GPT: 4
+    MCP: 4
+    agent: 4
+    Gemini: 3
+    OpenAI: 1

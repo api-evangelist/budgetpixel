@@ -1,11 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Budgetpixel Videos API
-  version: '2026-06-20'
   contact:
     email: support@budgetpixel.com
     name: BudgetPixel Support
-  description: 'Operations tagged Videos across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.'
+  title: BudgetPixel Videos API
+  version: '2026-06-20'
 servers:
 - description: Production
   url: https://api.budgetpixel.com/v1
@@ -21,9 +23,7 @@ paths:
 
         short-lived signed `video_url` (valid for several hours; re-call for a fresh
 
-        URL anytime — the underlying object is deleted 24h after generation).
-
-        '
+        URL anytime — the underlying object is deleted 24h after generation).'
       operationId: getVideo
       parameters:
       - description: The opaque job id returned by the create endpoint.
@@ -48,9 +48,6 @@ paths:
       summary: Get video job status
       tags:
       - Videos
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
 components:
   responses:
     Forbidden:
@@ -59,19 +56,41 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
     NotFound:
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
       description: The requested job was not found.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
   schemas:
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
     VideoJob:
       properties:
         aspect_ratio:
@@ -114,34 +133,9 @@ components:
       - failed
       - timeout
       type: string
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
       description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
       scheme: bearer
       type: http
-x-refined-from:
-- budgetpixel-openapi.yaml
-- budgetpixel-openapi.yaml

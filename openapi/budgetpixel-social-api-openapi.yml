@@ -1,11 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Budgetpixel Social API
-  version: '2026-06-20'
   contact:
     email: support@budgetpixel.com
     name: BudgetPixel Support
-  description: 'Operations tagged Social across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.'
+  title: BudgetPixel Social API
+  version: '2026-06-20'
 servers:
 - description: Production
   url: https://api.budgetpixel.com/v1
@@ -17,7 +19,67 @@ tags:
 paths:
   /posts:
     post:
-      description: "Publish a post to your public BudgetPixel feed — the same posts you create on the\nsite, so your local agent can publish on your behalf. **Synchronous**: the response\ncarries the live post's `id` and `url`.\n\n**Pricing: 10 credits per successful post**, charged only on success. Estimate via\n[`POST /v1/cost`](/api-reference/models/estimate-the-cost-of-a-request) with\n`{\"model\": \"create-post\"}`.\n\n**Media composition** (one of):\n- **Images** — 1 to 6 images. Each image can optionally carry `model` and\n  `prompt` generation info, shown on the image's info panel on the post.\n- **Video** — exactly 1 video, optionally with up to 3 accompanying images.\n- **Audio** — exactly 1 audio file (cannot mix with other media). Supports\n  `song_name`, `genre`, `lyrics`, and dedicated `cover_image` art (the cover is\n  NOT a media item — pass it in its own field).\n\nEach `media[].file` accepts a public URL, an uploaded-file URL from\n[`POST /v1/uploads`](/api-reference/files/upload-input-media), a data URI, or raw\nbase64. **Size limits:** images 15 MB; audio 50 MB; video 100 MB — note that URL\ninputs are fetched with a 30 MB cap and uploads support up to 50 MB, so ~50 MB is\nthe practical video ceiling via the API.\n\n**Limits & moderation:**\n- The API allows **5 posts per hour**, inside the site-wide limit of **20 posts\n  per hour** per account across all surfaces (shares included) — both on top of\n  the API's global rate limits. Exceeding any of them returns `429`.\n- Posting a byte-identical file you've already posted returns `409` with the\n  existing post's id.\n- Posts published through the API carry a public **\"via API\"** label, like posts\n  made with an Ava companion carry hers.\n- Image/video posts are **reviewed after publishing** (content rating and spam\n  scoring). Feed and gallery visibility follow that review and your account\n  standing; a post hidden by review is not refunded.\n"
+      description: 'Publish a post to your public BudgetPixel feed — the same posts you create on the
+
+        site, so your local agent can publish on your behalf. **Synchronous**: the response
+
+        carries the live post''s `id` and `url`.
+
+
+        **Pricing: 10 credits per successful post**, charged only on success. Estimate via
+
+        `POST /v1/cost` with
+
+        `{"model": "create-post"}`.
+
+
+        **Media composition** (one of):
+
+        - **Images** — 1 to 6 images. Each image can optionally carry `model` and
+
+        `prompt` generation info, shown on the image''s info panel on the post.
+
+        - **Video** — exactly 1 video, optionally with up to 3 accompanying images.
+
+        - **Audio** — exactly 1 audio file (cannot mix with other media). Supports
+
+        `song_name`, `genre`, `lyrics`, and dedicated `cover_image` art (the cover is
+
+        NOT a media item — pass it in its own field).
+
+
+        Each `media[].file` accepts a public URL, an uploaded-file URL from
+
+        `POST /v1/uploads`, a data URI, or raw
+
+        base64. **Size limits:** images 15 MB; audio 50 MB; video 100 MB — note that URL
+
+        inputs are fetched with a 30 MB cap and uploads support up to 50 MB, so ~50 MB is
+
+        the practical video ceiling via the API.
+
+
+        **Limits & moderation:**
+
+        - The API allows **5 posts per hour**, inside the site-wide limit of **20 posts
+
+        per hour** per account across all surfaces (shares included) — both on top of
+
+        the API''s global rate limits. Exceeding any of them returns `429`.
+
+        - Posting a byte-identical file you''ve already posted returns `409` with the
+
+        existing post''s id.
+
+        - Posts published through the API carry a public **"via API"** label, like posts
+
+        made with an Ava companion carry hers.
+
+        - Image/video posts are **reviewed after publishing** (content rating and spam
+
+        scoring). Feed and gallery visibility follow that review and your account
+
+        standing; a post hidden by review is not refunded.'
       operationId: createPost
       requestBody:
         content:
@@ -120,37 +182,7 @@ paths:
       summary: Publish a post
       tags:
       - Social
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
 components:
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   schemas:
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
@@ -218,12 +250,36 @@ components:
       required:
       - error
       type: object
+  responses:
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
       description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
       scheme: bearer
       type: http
-x-refined-from:
-- budgetpixel-openapi.yaml
-- budgetpixel-openapi.yaml

@@ -1,11 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Budgetpixel Music API
-  version: '2026-06-20'
   contact:
     email: support@budgetpixel.com
     name: BudgetPixel Support
-  description: 'Operations tagged Music across 2 of this provider''s published API definitions: budgetpixel-openapi.yaml, budgetpixel-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.'
+  title: BudgetPixel Music API
+  version: '2026-06-20'
 servers:
 - description: Production
   url: https://api.budgetpixel.com/v1
@@ -20,7 +22,7 @@ paths:
       description: 'Google Lyria 3 — high-fidelity music from a text prompt, with optional lyrics and up to 10 reference images to condition the mood. MP3 output (SynthID-watermarked).
 
 
-        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll `GET /v1/audios/{id}` until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
       operationId: createAudio_lyria_3
       requestBody:
         content:
@@ -61,15 +63,12 @@ paths:
       summary: Generate music with Lyria 3
       tags:
       - Music
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /audios/mureka-v9:
     post:
       description: 'Mureka V9 — songs that sing your exact lyrics (structural tags like [verse]/[chorus] supported) with a vocal gender preference, or instrumental/BGM tracks from a prompt. MP3 output.
 
 
-        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll `GET /v1/audios/{id}` until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
       operationId: createAudio_mureka_v9
       requestBody:
         content:
@@ -114,15 +113,12 @@ paths:
       summary: Generate music with Mureka V9
       tags:
       - Music
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /audios/music-2.6:
     post:
       description: 'MiniMax Music 2.6 — full-length songs from a style prompt and/or your own lyrics. Lyrics optimizer can write or polish lyrics from the prompt; instrumental mode skips vocals. MP3 or WAV output.
 
 
-        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll `GET /v1/audios/{id}` until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
       operationId: createAudio_music_2_6
       requestBody:
         content:
@@ -170,15 +166,12 @@ paths:
       summary: Generate music with Music 2.6
       tags:
       - Music
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /audios/music-3.0:
     post:
       description: 'MiniMax Music 3.0 — the latest MiniMax music model: full-length songs from a style prompt and/or your own lyrics. Lyrics optimizer can write or polish lyrics from the prompt; instrumental mode skips vocals. WAV or MP3 output.
 
 
-        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll `GET /v1/audios/{id}` until `status` is `succeeded` — the track URL is in that response''s `audio_url`.'
       operationId: createAudio_music_3_0
       requestBody:
         content:
@@ -226,15 +219,12 @@ paths:
       summary: Generate music with Music 3.0
       tags:
       - Music
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
   /audios/sonilo-music:
     post:
       description: 'Sonilo text-to-music — licensed instrumental and background music of an exact length (5-360 seconds) from a text prompt: soundtracks for videos, ads, apps and games. Priced per second of the requested duration with a 10-second minimum (rate in GET /v1/models; POST /v1/cost quotes the exact price). MP3 or WAV output.
 
 
-        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll [`GET /v1/audios/{id}`](/api-reference/audios/get-music-job-status) until `status` is `succeeded` — the track URL is in that response''s `audio_url`. Charged per second of the requested `duration` (10-second minimum; rate in `GET /v1/models`) on success only; `POST /v1/cost` quotes the exact price.'
+        **Asynchronous.** Returns a job `id` (the track is not in this response). Poll `GET /v1/audios/{id}` until `status` is `succeeded` — the track URL is in that response''s `audio_url`. Charged per second of the requested `duration` (10-second minimum; rate in `GET /v1/models`) on success only; `POST /v1/cost` quotes the exact price.'
       operationId: createAudio_sonilo_music
       requestBody:
         content:
@@ -279,10 +269,73 @@ paths:
       summary: Generate music with Sonilo Music
       tags:
       - Music
-    servers:
-    - description: Production
-      url: https://api.budgetpixel.com/v1
 components:
+  schemas:
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+    CreateAudioResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: aud_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
   responses:
     Forbidden:
       content:
@@ -310,78 +363,9 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: Missing or invalid API key.
-  schemas:
-    ModerationBlocked:
-      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
-      properties:
-        error:
-          description: Human-readable explanation of the block.
-          type: string
-        restriction_reason:
-          description: Stable machine-readable block reason.
-          enum:
-          - input_csam
-          - input_explicit_adult
-          - input_upload_nudity
-          - input_celebrity_likeness
-          - strict_model_nsfw
-          type: string
-      required:
-      - error
-      - restriction_reason
-      type: object
-    CreateAudioResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          example: aud_a1b2c3d4e5f6
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-    JobStatus:
-      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
-      enum:
-      - pending
-      - starting
-      - processing
-      - completing
-      - succeeded
-      - failed
-      - timeout
-      type: string
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
       description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
       scheme: bearer
       type: http
-x-refined-from:
-- budgetpixel-openapi.yaml
-- budgetpixel-openapi.yaml

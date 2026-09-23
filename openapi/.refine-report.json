@@ -1,8 +1,7 @@
 {
   "provider": "budgetpixel",
   "sources": [
-    "_original/budgetpixel-openapi.yaml",
-    "budgetpixel-openapi.yaml"
+    "_original/budgetpixel-openapi.yaml"
   ],
   "outputs": [
     "budgetpixel-account-api-openapi.yml",
@@ -32,11 +31,12 @@
     "budgetpixel-xai-api-openapi.yml"
   ],
   "archived": [
-    "archived openapi/budgetpixel-openapi.yaml"
+    "deleted 1 superseded output(s) from the previous generation"
   ],
   "errors": [],
   "warnings": [],
   "notes": [
+    "1 archived document(s) dropped as subsets of other archived documents",
     "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
     "budgetpixel-openapi.yaml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
     "budgetpixel-openapi.yaml: declared missing tag: Alibaba",
@@ -48,41 +48,35 @@
     "budgetpixel-openapi.yaml: declared missing tag: Pruna AI",
     "budgetpixel-openapi.yaml: declared missing tag: Upscaling",
     "budgetpixel-openapi.yaml: declared missing tag: xAI",
-    "budgetpixel-openapi.yaml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
-    "budgetpixel-openapi.yaml: declared missing tag: Alibaba",
-    "budgetpixel-openapi.yaml: declared missing tag: Google",
-    "budgetpixel-openapi.yaml: declared missing tag: Lip Sync",
-    "budgetpixel-openapi.yaml: declared missing tag: MiniMax",
-    "budgetpixel-openapi.yaml: declared missing tag: Motion Control",
-    "budgetpixel-openapi.yaml: declared missing tag: OpenAI",
-    "budgetpixel-openapi.yaml: declared missing tag: Pruna AI",
-    "budgetpixel-openapi.yaml: declared missing tag: Upscaling",
-    "budgetpixel-openapi.yaml: declared missing tag: xAI",
-    "tag 'Account' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Alibaba' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Audios' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Black Forest Labs' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'ByteDance (SeeDance)' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Bytedance' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Classification' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Conversions' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Google' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Images' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Kling' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Lip Sync' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'MiniMax' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Models' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Moderation' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Motion Control' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Music' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'OpenAI' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Pruna AI' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Social' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Sound Effects' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Uploads' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Upscaling' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'Videos' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied",
-    "tag 'xAI' spans 2 source specs (budgetpixel-openapi.yaml, budgetpixel-openapi.yaml): per-path servers applied"
+    "superseded outputs removed: budgetpixel-mini-max-api-openapi.yml",
+    "apis.yml register: written (+1 apis, 27 total)"
   ],
-  "skipped": []
+  "skipped": [
+    "_original/budgetpixel-openapi_2.yaml: archived document superseded by a larger archived document",
+    "budgetpixel-account-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-alibaba-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-audios-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-black-forest-labs-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-bytedance-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-bytedance-seedance-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-classification-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-conversions-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-google-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-images-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-kling-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-lip-sync-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-mini-max-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-models-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-moderation-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-motion-control-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-music-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-openai-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-pruna-ai-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-social-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-sound-effects-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-uploads-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-upscaling-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-videos-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "budgetpixel-xai-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
