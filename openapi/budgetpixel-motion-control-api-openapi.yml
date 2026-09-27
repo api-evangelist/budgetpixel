@@ -149,7 +149,62 @@ paths:
       tags:
       - Motion Control
 components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
   schemas:
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
     MotionJob:
       properties:
         completed_at:
@@ -197,28 +252,6 @@ components:
       - error
       - restriction_reason
       type: object
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
     CreateMotionResponse:
       properties:
         credits:
@@ -249,39 +282,6 @@ components:
       - failed
       - timeout
       type: string
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

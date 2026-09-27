@@ -50,6 +50,12 @@ paths:
       - Videos
 components:
   responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
     Forbidden:
       content:
         application/json:
@@ -62,12 +68,6 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: The requested job was not found.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   schemas:
     Error:
       properties:
@@ -91,6 +91,17 @@ components:
       required:
       - error
       type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
     VideoJob:
       properties:
         aspect_ratio:
@@ -122,17 +133,6 @@ components:
           format: uri
           type: string
       type: object
-    JobStatus:
-      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
-      enum:
-      - pending
-      - starting
-      - processing
-      - completing
-      - succeeded
-      - failed
-      - timeout
-      type: string
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

@@ -52,7 +52,7 @@ tags:
 - Content Moderation
 - Creative Tools
 - Design
-- agent-native
+- Agent-Native
 - MCP
 - MCP Server
 - Artificial Intelligence
@@ -67,7 +67,7 @@ tags:
 - Upscaling
 - Credit
 - Model Aggregator
-- Agent Card
+- A2A
 tags_raw:
 - Generative AI
 - AI Image Generation
@@ -93,6 +93,7 @@ tags_raw:
 - Credits
 - Model Aggregator
 - Agent Card
+- agent-native
 apis:
 - name: BudgetPixel MCP Server
   description: >-
@@ -105,7 +106,7 @@ apis:
   humanURL: https://budgetpixel.com/mcp
   baseURL: https://mcp.budgetpixel.com/mcp
   tags:
-  - agent-native
+  - Agent-Native
   - MCP
   - MCP Server
   - Artificial Intelligence
@@ -124,6 +125,7 @@ apis:
   - Video Models
   - Music/Audio Generation
   - Creative Tools
+  - agent-native
   properties:
   - type: MCPServer
     url: https://mcp.budgetpixel.com/mcp
@@ -151,7 +153,7 @@ apis:
   humanURL: https://docs.budgetpixel.com/introduction
   baseURL: https://docs.budgetpixel.com/mcp
   tags:
-  - agent-native
+  - Agent-Native
   - MCP
   - MCP Server
   - Artificial Intelligence
@@ -162,6 +164,7 @@ apis:
   - MCP Server
   - AI
   - Documentation
+  - agent-native
   properties:
   - type: MCPServer
     url: https://docs.budgetpixel.com/mcp
@@ -857,8 +860,6 @@ apis:
   humanURL: https://budgetpixel.com/mcp
   baseURL: https://mcp.budgetpixel.com/mcp
   tags:
-  - MiniMax
-  tags_raw:
   - Mini Max
   properties:
   - type: OpenAPI
@@ -962,3 +963,10 @@ x-enrichment:
   status: enriched
   artifacts_added: 30
   pass: local-v1
+x-a2a:
+  verified: true
+  probed: '2026-09-26'
+  url: "https://docs.budgetpixel.com/.well-known/agent-card.json"
+  grade: "conformant"
+  protocol_version: "0.3"
+  control: 404

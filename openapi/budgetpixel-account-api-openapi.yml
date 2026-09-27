@@ -33,6 +33,13 @@ paths:
       tags:
       - Account
 components:
+  responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
   schemas:
     Error:
       properties:
@@ -71,13 +78,6 @@ components:
           description: Total spendable credits (monthly remaining + extra).
           type: integer
       type: object
-  responses:
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

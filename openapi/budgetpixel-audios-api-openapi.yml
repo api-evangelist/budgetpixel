@@ -53,7 +53,48 @@ paths:
       tags:
       - Audios
 components:
+  responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
   schemas:
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
     AudioJob:
       properties:
         audio_url:
@@ -77,28 +118,6 @@ components:
           format: uri
           type: string
       type: object
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -110,25 +129,6 @@ components:
       - failed
       - timeout
       type: string
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

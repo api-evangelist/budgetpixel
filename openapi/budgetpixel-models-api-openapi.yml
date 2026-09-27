@@ -104,70 +104,40 @@ paths:
       tags:
       - Models
 components:
+  responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Rate or queue limit reached. Retry after a short delay.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
   schemas:
-    Model:
-      properties:
-        credits_per_generation:
-          description: Per-output-image cost (images) or per-track cost (music). 0 for per-second models (video, sound effects) — see credits_per_unit.
-          example: 45
-          type: integer
-        credits_per_unit:
-          description: Per-unit cost for metered models (e.g. per second of video). For resolution-priced models this is the default resolution's rate.
-          example: 220
-          type: integer
-        min_billable_seconds:
-          description: Billing floor for per-second audio models (sound effects, Sonilo Music) — cost = credits_per_unit × max(min_billable_seconds, seconds rounded up). Absent for flat-priced models.
-          example: 3
-          type: integer
-        name:
-          example: flux-2-klein
-          type: string
-        resolution_pricing:
-          additionalProperties:
-            type: integer
-          description: For video models whose per-second rate varies by resolution, a map of resolution to per-second cost. Absent when pricing is flat.
-          example:
-            4k: 1250
-            480p: 100
-            720p: 220
-            1080p: 550
-          type: object
-        type:
-          enum:
-          - image
-          - video
-          - audio
-          type: string
-        unit_type:
-          description: The unit `credits_per_unit` applies to.
-          enum:
-          - generation
-          - second
-          type: string
-      required:
-      - name
-      - type
-      - credits_per_generation
-      type: object
-    ModerationBlocked:
-      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
-      properties:
-        error:
-          description: Human-readable explanation of the block.
-          type: string
-        restriction_reason:
-          description: Stable machine-readable block reason.
-          enum:
-          - input_csam
-          - input_explicit_adult
-          - input_upload_nudity
-          - input_celebrity_likeness
-          - strict_model_nsfw
-          type: string
-      required:
-      - error
-      - restriction_reason
-      type: object
     Error:
       properties:
         error:
@@ -223,39 +193,69 @@ components:
       - credits
       - exact
       type: object
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    Model:
+      properties:
+        credits_per_generation:
+          description: Per-output-image cost (images) or per-track cost (music). 0 for per-second models (video, sound effects) — see credits_per_unit.
+          example: 45
+          type: integer
+        credits_per_unit:
+          description: Per-unit cost for metered models (e.g. per second of video). For resolution-priced models this is the default resolution's rate.
+          example: 220
+          type: integer
+        min_billable_seconds:
+          description: Billing floor for per-second audio models (sound effects, Sonilo Music) — cost = credits_per_unit × max(min_billable_seconds, seconds rounded up). Absent for flat-priced models.
+          example: 3
+          type: integer
+        name:
+          example: flux-2-klein
+          type: string
+        resolution_pricing:
+          additionalProperties:
+            type: integer
+          description: For video models whose per-second rate varies by resolution, a map of resolution to per-second cost. Absent when pricing is flat.
+          example:
+            4k: 1250
+            480p: 100
+            720p: 220
+            1080p: 550
+          type: object
+        type:
+          enum:
+          - image
+          - video
+          - audio
+          type: string
+        unit_type:
+          description: The unit `credits_per_unit` applies to.
+          enum:
+          - generation
+          - second
+          type: string
+      required:
+      - name
+      - type
+      - credits_per_generation
+      type: object
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*
