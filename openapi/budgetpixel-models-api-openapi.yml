@@ -105,20 +105,6 @@ paths:
       - Models
 components:
   responses:
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
     Forbidden:
       content:
         application/json:
@@ -131,6 +117,20 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: Rate or queue limit reached. Retry after a short delay.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
     NotFound:
       content:
         application/json:
@@ -138,28 +138,6 @@ components:
             $ref: '#/components/schemas/Error'
       description: The requested job was not found.
   schemas:
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
     CostEstimate:
       description: The credit cost of a request. The real charge is always ≤ `credits` (failures cost nothing; sequential image jobs may use fewer images).
       properties:
@@ -211,6 +189,28 @@ components:
       required:
       - error
       - restriction_reason
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
       type: object
     Model:
       properties:

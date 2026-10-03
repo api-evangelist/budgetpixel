@@ -432,12 +432,6 @@ paths:
       - ByteDance (SeeDance)
 components:
   responses:
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
     BadRequest:
       content:
         application/json:
@@ -446,41 +440,25 @@ components:
             - $ref: '#/components/schemas/Error'
             - $ref: '#/components/schemas/ModerationBlocked'
       description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
     TooManyRequests:
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
       description: Rate or queue limit reached. Retry after a short delay.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
   schemas:
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
     CreateVideoResponse:
       properties:
         id:
@@ -511,6 +489,28 @@ components:
       required:
       - error
       - restriction_reason
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
       type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.

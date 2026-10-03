@@ -252,56 +252,6 @@ paths:
       - Upscaling
 components:
   schemas:
-    MotionJob:
-      properties:
-        completed_at:
-          format: date-time
-          type: string
-        created_at:
-          format: date-time
-          type: string
-        error_message:
-          type: string
-        id:
-          type: string
-        model:
-          type: string
-        status:
-          description: Lifecycle state. `succeeded`/`failed`/`canceled` are terminal.
-          enum:
-          - pending
-          - processing
-          - succeeded
-          - failed
-          - canceled
-          type: string
-        video_url:
-          description: Short-lived presigned URL; present once `status=succeeded`.
-          format: uri
-          type: string
-      type: object
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
     UpscaleJob:
       properties:
         completed_at:
@@ -346,24 +296,27 @@ components:
         status:
           $ref: '#/components/schemas/JobStatus'
       type: object
-    ModerationBlocked:
-      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+    Error:
       properties:
         error:
-          description: Human-readable explanation of the block.
-          type: string
-        restriction_reason:
-          description: Stable machine-readable block reason.
-          enum:
-          - input_csam
-          - input_explicit_adult
-          - input_upload_nudity
-          - input_celebrity_likeness
-          - strict_model_nsfw
-          type: string
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
       required:
       - error
-      - restriction_reason
       type: object
     CreateMotionResponse:
       properties:
@@ -384,6 +337,25 @@ components:
         status:
           $ref: '#/components/schemas/JobStatus'
       type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -395,6 +367,34 @@ components:
       - failed
       - timeout
       type: string
+    MotionJob:
+      properties:
+        completed_at:
+          format: date-time
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        error_message:
+          type: string
+        id:
+          type: string
+        model:
+          type: string
+        status:
+          description: Lifecycle state. `succeeded`/`failed`/`canceled` are terminal.
+          enum:
+          - pending
+          - processing
+          - succeeded
+          - failed
+          - canceled
+          type: string
+        video_url:
+          description: Short-lived presigned URL; present once `status=succeeded`.
+          format: uri
+          type: string
+      type: object
   responses:
     BadRequest:
       content:
@@ -404,24 +404,24 @@ components:
             - $ref: '#/components/schemas/Error'
             - $ref: '#/components/schemas/ModerationBlocked'
       description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
     TooManyRequests:
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
       description: Rate or queue limit reached. Retry after a short delay.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
     NotFound:
       content:
         application/json:

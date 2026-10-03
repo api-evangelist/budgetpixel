@@ -50,6 +50,12 @@ paths:
       - Images
 components:
   responses:
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
     Unauthorized:
       content:
         application/json:
@@ -62,12 +68,6 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
   schemas:
     Error:
       properties:
