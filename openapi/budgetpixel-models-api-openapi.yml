@@ -111,12 +111,24 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
     TooManyRequests:
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
       description: Rate or queue limit reached. Retry after a short delay.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
     BadRequest:
       content:
         application/json:
@@ -125,71 +137,7 @@ components:
             - $ref: '#/components/schemas/Error'
             - $ref: '#/components/schemas/ModerationBlocked'
       description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
   schemas:
-    CostEstimate:
-      description: The credit cost of a request. The real charge is always ≤ `credits` (failures cost nothing; sequential image jobs may use fewer images).
-      properties:
-        credits:
-          description: Credits the request will cost — the maximum, for non-deterministic cases.
-          example: 2750
-          type: integer
-        exact:
-          description: True when the cost is exact; false when `credits` is an upper bound (e.g. seedream sequential, where the model picks the image count).
-          type: boolean
-        model:
-          example: seedance-2.0
-          type: string
-        type:
-          enum:
-          - image
-          - video
-          - audio
-          - conversion
-          - social
-          - moderation
-          - classification
-          - motion
-          - lip-sync
-          - upscale
-          - video-upscale
-          type: string
-      required:
-      - model
-      - type
-      - credits
-      - exact
-      type: object
-    ModerationBlocked:
-      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
-      properties:
-        error:
-          description: Human-readable explanation of the block.
-          type: string
-        restriction_reason:
-          description: Stable machine-readable block reason.
-          enum:
-          - input_csam
-          - input_explicit_adult
-          - input_upload_nudity
-          - input_celebrity_likeness
-          - strict_model_nsfw
-          type: string
-      required:
-      - error
-      - restriction_reason
-      type: object
     Error:
       properties:
         error:
@@ -211,6 +159,25 @@ components:
           type: object
       required:
       - error
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
       type: object
     Model:
       properties:
@@ -255,6 +222,39 @@ components:
       - name
       - type
       - credits_per_generation
+      type: object
+    CostEstimate:
+      description: The credit cost of a request. The real charge is always ≤ `credits` (failures cost nothing; sequential image jobs may use fewer images).
+      properties:
+        credits:
+          description: Credits the request will cost — the maximum, for non-deterministic cases.
+          example: 2750
+          type: integer
+        exact:
+          description: True when the cost is exact; false when `credits` is an upper bound (e.g. seedream sequential, where the model picks the image count).
+          type: boolean
+        model:
+          example: seedance-2.0
+          type: string
+        type:
+          enum:
+          - image
+          - video
+          - audio
+          - conversion
+          - social
+          - moderation
+          - classification
+          - motion
+          - lip-sync
+          - upscale
+          - video-upscale
+          type: string
+      required:
+      - model
+      - type
+      - credits
+      - exact
       type: object
   securitySchemes:
     ApiKeyAuth:

@@ -860,8 +860,6 @@ apis:
   humanURL: https://budgetpixel.com/mcp
   baseURL: https://mcp.budgetpixel.com/mcp
   tags:
-  - MiniMax
-  tags_raw:
   - Mini Max
   properties:
   - type: OpenAPI
