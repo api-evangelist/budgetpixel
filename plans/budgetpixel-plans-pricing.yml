@@ -163,3 +163,47 @@ promotions:
   note: 'Time-boxed per-model discounts run on Premium/Pro/Ultra and apply automatically at generation;
     POST /v1/cost quotes the discounted price. Observed live 2026-08-28: Wan 3.0 video 30% off, ending
     Aug 31.'
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - free
+  - subscription
+  units: []
+  plans:
+  - name: Free
+    access: other
+    model: free
+    model_how: derived
+    units: []
+    periods: []
+  - name: Starter
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods: []
+  - name: Basic
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods: []
+  - name: Premium
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods: []
+  - name: Pro
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods: []
+  - name: Ultra
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods: []
