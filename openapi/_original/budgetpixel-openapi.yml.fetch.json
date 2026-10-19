@@ -1,0 +1,12 @@
+{
+ "url": "https://api.budgetpixel.com/openapi.yaml",
+ "final": "https://api.budgetpixel.com/openapi.yaml",
+ "status": 200,
+ "content_type": "application/yaml; charset=utf-8",
+ "bytes": 437621,
+ "sha256": "1011b18c1b4bd234fd0754f190383488861024c7ff4fcc90e0ed48b4e8a7d0c4",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
+}

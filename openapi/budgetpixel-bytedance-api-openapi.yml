@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Bytedance API
   version: '2026-06-20'
 servers:
@@ -22,7 +99,10 @@ paths:
       description: 'ByteDance SeeDream 4.5 — text-to-image, plus image editing and multi-reference composition from up to 9 reference images. Strong aesthetics, 2K/4K output.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: SeeDream 4.5'
       operationId: createImage_seedream_4_5
       requestBody:
         content:
@@ -64,6 +144,7 @@ paths:
                     type: string
                   maxItems: 9
                   type: array
+                  x-bpx-media: image
                 sequential_image_generation:
                   default: disabled
                   description: Set to "auto" to return a group of related images (up to max_images); "disabled" (default) returns a single image.
@@ -100,12 +181,96 @@ paths:
       summary: Generate image with SeeDream 4.5
       tags:
       - Bytedance
+  /images/seedream-5.0-flash:
+    post:
+      description: 'ByteDance SeeDream 5.0 Flash — fast, low-cost text-to-image and image editing with multi-reference composition from up to 10 reference images and 1K/2K output, typically in under 20 seconds. Can keep a transparent background when editing a PNG cutout. Billing: a flat 25 credits per image at 1K or 2K; input images are free. No grouped/sequential generation.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: SeeDream 5.0 Flash'
+      operationId: createImage_seedream_5_0_flash
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '1:1'
+                  description: Output aspect ratio.
+                  enum:
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '16:9'
+                  - '9:16'
+                  - '2:3'
+                  - '3:2'
+                  - '21:9'
+                  - '9:21'
+                  type: string
+                background:
+                  default: opaque
+                  description: 'Output background. "transparent" keeps a transparent background when editing: it needs exactly one input image, a PNG that already has transparent pixels (a cutout, sticker or logo), and returns a PNG with an alpha channel. Text-to-image and multi-reference requests must use "opaque".'
+                  enum:
+                  - opaque
+                  - transparent
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 10) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Input images are free.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                  x-bpx-media: image
+                size:
+                  default: 2K
+                  description: Output resolution. Both tiers bill the same 25 credits per image.
+                  enum:
+                  - 1K
+                  - 2K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with SeeDream 5.0 Flash
+      tags:
+      - Bytedance
   /images/seedream-5.0-lite:
     post:
       description: 'ByteDance SeeDream 5.0 Lite — fast unified text-to-image and image editing with multi-reference composition from up to 9 reference images, 2K/3K output, and grouped sequential generation.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: SeeDream 5.0 Lite'
       operationId: createImage_seedream_5_0_lite
       requestBody:
         content:
@@ -147,6 +312,7 @@ paths:
                     type: string
                   maxItems: 9
                   type: array
+                  x-bpx-media: image
                 sequential_image_generation:
                   default: disabled
                   description: Set to "auto" to return a group of related images (up to max_images); "disabled" (default) returns a single image.
@@ -188,7 +354,10 @@ paths:
       description: 'ByteDance SeeDream 5.0 Pro — precise image editing with full layer control. Text-to-image, instruction-based editing, and multi-reference composition from up to 9 reference images with 1K/2K output. Billing: 55 credits per image at 1K, 110 at 2K; input images bill 5 credits each after the first (first is free). No grouped/sequential generation.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: SeeDream 5.0 Pro'
       operationId: createImage_seedream_5_0_pro
       requestBody:
         content:
@@ -209,6 +378,13 @@ paths:
                   - '21:9'
                   - '9:21'
                   type: string
+                background:
+                  default: opaque
+                  description: 'Output background. "transparent" keeps a transparent background when editing: it needs exactly one input image, a PNG that already has transparent pixels (a cutout, sticker or logo), and returns a PNG with an alpha channel. Text-to-image and multi-reference requests must use "opaque".'
+                  enum:
+                  - opaque
+                  - transparent
+                  type: string
                 num_images:
                   default: 1
                   description: Number of images to generate.
@@ -224,6 +400,7 @@ paths:
                     type: string
                   maxItems: 9
                   type: array
+                  x-bpx-media: image
                 size:
                   default: 1K
                   description: Output resolution. 1K bills 55 credits per image; 2K bills 110.
@@ -254,7 +431,73 @@ paths:
       tags:
       - Bytedance
 components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
   schemas:
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -288,6 +531,43 @@ components:
       required:
       - error
       type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
       properties:
@@ -307,46 +587,6 @@ components:
       - error
       - restriction_reason
       type: object
-    CreateImageResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          example: img_a1b2c3d4e5f6
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

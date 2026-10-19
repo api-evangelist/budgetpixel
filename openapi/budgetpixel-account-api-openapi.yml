@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Account API
   version: '2026-06-20'
 servers:
@@ -34,21 +111,6 @@ paths:
       - Account
 components:
   schemas:
-    CreditBalance:
-      properties:
-        extra_credits:
-          description: Purchased credits that don't reset monthly.
-          type: integer
-        monthly_limit:
-          type: integer
-        monthly_remaining:
-          type: integer
-        monthly_used:
-          type: integer
-        total_available:
-          description: Total spendable credits (monthly remaining + extra).
-          type: integer
-      type: object
     Error:
       properties:
         error:
@@ -70,6 +132,21 @@ components:
           type: object
       required:
       - error
+      type: object
+    CreditBalance:
+      properties:
+        extra_credits:
+          description: Purchased credits that don't reset monthly.
+          type: integer
+        monthly_limit:
+          type: integer
+        monthly_remaining:
+          type: integer
+        monthly_used:
+          type: integer
+        total_available:
+          description: Total spendable credits (monthly remaining + extra).
+          type: integer
       type: object
   responses:
     Unauthorized:

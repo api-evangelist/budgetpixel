@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Black Forest Labs API
   version: '2026-06-20'
 servers:
@@ -22,7 +99,10 @@ paths:
       description: 'Black Forest Labs FLUX 1.1 Pro — fast, high-quality generation with enhanced prompt adherence. Text-to-image and single-image editing.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: FLUX 1.1 Pro'
       operationId: createImage_flux_1_1_pro
       requestBody:
         content:
@@ -46,6 +126,7 @@ paths:
                 image:
                   description: Optional image-to-image input. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
                   type: string
+                  x-bpx-media: image
                 num_images:
                   default: 1
                   description: Number of images to generate.
@@ -85,7 +166,10 @@ paths:
       description: 'Black Forest Labs FLUX 2 Dev — next-generation FLUX quality with multi-reference image editing (up to 4 reference images) and seed control.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: FLUX 2 Dev'
       operationId: createImage_flux_2_dev
       requestBody:
         content:
@@ -119,6 +203,7 @@ paths:
                     type: string
                   maxItems: 4
                   type: array
+                  x-bpx-media: image
                 seed:
                   description: Seed for reproducible generation. Omit for random.
                   type: integer
@@ -149,7 +234,10 @@ paths:
       description: 'Black Forest Labs FLUX.2 Klein — sub-second generation with excellent prompt adherence. Text-to-image and image editing with up to 3 reference images, megapixel-based resolution, and seed control.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: FLUX 2 Klein'
       operationId: createImage_flux_2_klein
       requestBody:
         content:
@@ -197,6 +285,7 @@ paths:
                     type: string
                   maxItems: 3
                   type: array
+                  x-bpx-media: image
                 seed:
                   description: Seed for reproducible generation. Omit for random.
                   type: integer
@@ -227,7 +316,10 @@ paths:
       description: 'Black Forest Labs FLUX 2 Pro — premium quality with megapixel-based resolution and seed control.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: FLUX 2 Pro'
       operationId: createImage_flux_2_pro
       requestBody:
         content:
@@ -249,6 +341,7 @@ paths:
                 image:
                   description: Optional image-to-image input. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
                   type: string
+                  x-bpx-media: image
                 num_images:
                   default: 1
                   description: Number of images to generate.
@@ -292,8 +385,338 @@ paths:
       summary: Generate image with FLUX 2 Pro
       tags:
       - Black Forest Labs
+  /images/flux-3-image:
+    post:
+      description: 'Black Forest Labs FLUX 3 — text-to-image and image editing in one model. Edit or compose from up to 10 reference images (free), render at five sizes from 768px to 4K, and optionally let the model ground the prompt with web and image search. Billing: per image by size — 768px = 55, 1K = 65, 1.5K = 90, 2K = 130, 4K = 790 credits. Use POST /v1/cost for an exact quote.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: FLUX 3'
+      operationId: createImage_flux_3_image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: auto
+                  description: Output aspect ratio. "auto" (default) follows the first reference image when editing, or lets the model pick a ratio from the prompt for text-to-image.
+                  enum:
+                  - auto
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '5:4'
+                  - '4:5'
+                  - '2:1'
+                  - '1:2'
+                  - '21:9'
+                  - '9:21'
+                  type: string
+                grounding:
+                  default: true
+                  description: Let the model research the prompt with web and image search before rendering (default true). Set false for faster, self-contained generation. Costs nothing extra.
+                  type: boolean
+                num_images:
+                  default: 1
+                  description: Number of images to generate. Each image is billed at its size's price.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate, or of the edit to apply to the reference images.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 10) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Reference images cost nothing extra.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                  x-bpx-media: image
+                size:
+                  default: 1K
+                  description: 'Output size by approximate pixel count: 768px ≈ 0.6 MP, 1K ≈ 1 MP, 1.5K ≈ 2 MP, 2K ≈ 4 MP, 4K ≈ 16 MP. Sets the price: 55 / 65 / 90 / 130 / 790 credits per image. 4K is returned as a JPEG, smaller sizes as PNG.'
+                  enum:
+                  - 768px
+                  - 1K
+                  - 1.5K
+                  - 2K
+                  - 4K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with FLUX 3
+      tags:
+      - Black Forest Labs
+  /images/flux-3-image-klein:
+    post:
+      description: 'Black Forest Labs FLUX 3 Klein — the fast, low-cost FLUX 3: text-to-image and image editing in one model, with up to 10 reference images (free) and five sizes from 768px to 4K. Billing: per image by size — 768px = 11, 1K = 12, 1.5K = 15, 2K = 19, 4K = 48 credits. Use POST /v1/cost for an exact quote.
+
+
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: FLUX 3 Klein'
+      operationId: createImage_flux_3_image_klein
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: auto
+                  description: Output aspect ratio. "auto" (default) follows the first reference image when editing, or lets the model pick a ratio from the prompt for text-to-image.
+                  enum:
+                  - auto
+                  - '1:1'
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '5:4'
+                  - '4:5'
+                  - '2:1'
+                  - '1:2'
+                  - '21:9'
+                  - '9:21'
+                  type: string
+                num_images:
+                  default: 1
+                  description: Number of images to generate. Each image is billed at its size's price.
+                  maximum: 4
+                  minimum: 1
+                  type: integer
+                prompt:
+                  description: Text description of the image to generate, or of the edit to apply to the reference images.
+                  type: string
+                reference_images:
+                  description: Optional reference images (up to 10) for image editing and multi-reference composition. Each item is a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image. Reference images cost nothing extra.
+                  items:
+                    type: string
+                  maxItems: 10
+                  type: array
+                  x-bpx-media: image
+                size:
+                  default: 1K
+                  description: 'Output size by approximate pixel count: 768px ≈ 0.6 MP, 1K ≈ 1 MP, 1.5K ≈ 2 MP, 2K ≈ 4 MP, 4K ≈ 16 MP. Sets the price: 11 / 12 / 15 / 19 / 48 credits per image. 4K is returned as a JPEG, smaller sizes as PNG.'
+                  enum:
+                  - 768px
+                  - 1K
+                  - 1.5K
+                  - 2K
+                  - 4K
+                  type: string
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate image with FLUX 3 Klein
+      tags:
+      - Black Forest Labs
+  /videos/flux-3-video:
+    post:
+      description: 'Black Forest Labs FLUX 3 Video, with generated audio (sound effects, ambience, and dialogue with lip sync). Text-to-video; image-to-video from a first frame, or a first and a last frame; and video extension (supply a `video` to continue it from its last frames: the result is your clip followed by the new footage). 720p, 1080p, 1440p or 4K at 24 fps; 5-20 seconds (an extension adds 5-15). Billed per second of output by resolution, an extension at its own rate (the source clip is not billed): see `mode_pricing` in GET /v1/models or POST /v1/cost.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: FLUX 3 Video'
+      operationId: createVideo_flux_3_video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio for text-to-video. With `image` or `video` the picture sets the shape and this is ignored.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '1:1'
+                  - '4:3'
+                  - '3:4'
+                  - '21:9'
+                  - '2:1'
+                  - '9:21'
+                  type: string
+                end_image:
+                  description: 'Optional last frame, used together with `image`: the video moves from the first frame to this one. Same input forms as `image`.'
+                  type: string
+                  x-bpx-media: image
+                generate_audio:
+                  default: true
+                  description: Generate sound with the video (default true; no price impact). false makes a silent clip.
+                  type: boolean
+                image:
+                  description: Optional first frame for image-to-video; the video starts from it and follows its shape. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Can't be combined with `video`.
+                  type: string
+                  x-bpx-media: image
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds, any whole number from 5 to 20. When extending, the seconds of NEW footage, 5 to 15.
+                  maximum: 20
+                  minimum: 5
+                  type: integer
+                prompt:
+                  description: Text description of the video, including the sound you want (a line in quotes is spoken). When extending, describe what happens next, not the source.
+                  type: string
+                resolution:
+                  default: 720p
+                  description: 'Output resolution: 720p (1280x704 at 16:9), 1080p (1920x1088), 1440p (2560x1440) or 4k (3840x2176). Sets the price per second, see `mode_pricing` in GET /v1/models.'
+                  enum:
+                  - 720p
+                  - 1080p
+                  - 1440p
+                  - 4k
+                  type: string
+                video:
+                  description: Optional video to EXTEND (MP4 or MOV, 1 second to 2 minutes, up to 100MB). The model continues it from its last frames for `length_seconds` of new footage guided by `prompt`, and the result is the source followed by the continuation, at the chosen `resolution`. Provide a public video URL or an uploaded-file URL from POST /v1/uploads. Can't be combined with `image`/`end_image`. Only the new seconds are billed, at the extend rate.
+                  type: string
+                  x-bpx-media: video
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with FLUX 3 Video
+      tags:
+      - Black Forest Labs
 components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
   schemas:
+    CreateVideoResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -327,6 +750,43 @@ components:
       required:
       - error
       type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
       properties:
@@ -346,46 +806,6 @@ components:
       - error
       - restriction_reason
       type: object
-    CreateImageResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          example: img_a1b2c3d4e5f6
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

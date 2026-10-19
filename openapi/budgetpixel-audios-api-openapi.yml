@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Audios API
   version: '2026-06-20'
 servers:
@@ -21,11 +98,13 @@ paths:
     get:
       description: 'Poll until `status` is `succeeded`. The generated track (or sound effect) is
 
-        returned as a short-lived signed `audio_url` (valid for several hours; re-call
+        returned as a signed `audio_url`, valid for at least 6 hours; call this
 
-        this endpoint for a fresh URL anytime — the underlying object is deleted 24h
+        endpoint again for a fresh one at any time until `expires_at`, 24 hours after
 
-        after generation). Serves every `POST /v1/audios/{model}` job — music and
+        the job was created. After that the file is deleted, `expired` is `true` and
+
+        no URL is returned. Serves every `POST /v1/audios/{model}` job — music and
 
         sound effects alike.'
       operationId: getAudio
@@ -53,7 +132,68 @@ paths:
       tags:
       - Audios
 components:
+  responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
   schemas:
+    AudioJob:
+      properties:
+        audio_url:
+          description: The generated track or sound effect (signed URL, valid at least 6 hours); present once `status=succeeded`, until `expired` is `true`.
+          format: uri
+          type: string
+        completed_at:
+          description: When the job finished. Present once `status` is `succeeded` or `failed` (absent on jobs from before this field was added, October 2026).
+          format: date-time
+          type: string
+        created_at:
+          description: When the job was submitted.
+          format: date-time
+          type: string
+        error:
+          type: string
+        expired:
+          description: Present once `status=succeeded`. `true` after `expires_at`; no URLs are returned then.
+          type: boolean
+        expires_at:
+          description: Present once `status=succeeded`. When the outputs are deleted, 24 hours after `created_at`.
+          format: date-time
+          type: string
+        id:
+          example: aud_a1b2c3d4e5f6
+          type: string
+        model:
+          type: string
+        prompt:
+          description: The prompt exactly as you submitted it; absent for lyrics-only songs.
+          type: string
+        started_at:
+          description: When processing started, i.e. when the job left the queue. Absent on jobs from before this field was added (October 2026).
+          format: date-time
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        video_url:
+          description: Video-to-sound-effect jobs only — the input video with the generated effects mixed in (signed URL, valid at least 6 hours); present once `status=succeeded`, until `expired` is `true`.
+          format: uri
+          type: string
+      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -65,29 +205,6 @@ components:
       - failed
       - timeout
       type: string
-    AudioJob:
-      properties:
-        audio_url:
-          description: The generated track or sound effect (signed URL, valid several hours); present once `status=succeeded`.
-          format: uri
-          type: string
-        created_at:
-          format: date-time
-          type: string
-        error:
-          type: string
-        id:
-          example: aud_a1b2c3d4e5f6
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-        video_url:
-          description: Video-to-sound-effect jobs only — the input video with the generated effects mixed in (signed URL, valid several hours); present once `status=succeeded`.
-          format: uri
-          type: string
-      type: object
     Error:
       properties:
         error:
@@ -110,25 +227,6 @@ components:
       required:
       - error
       type: object
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

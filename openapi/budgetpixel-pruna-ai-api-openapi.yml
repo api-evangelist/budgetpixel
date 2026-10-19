@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Pruna AI API
   version: '2026-06-20'
 servers:
@@ -21,7 +98,10 @@ paths:
       description: 'Pruna AI P-Image — an optimised Qwen-based text-to-image model generating 1-megapixel images in about a second. Built for rapid iteration at very low cost.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: P-Image'
       operationId: createImage_p_image
       requestBody:
         content:
@@ -79,7 +159,10 @@ paths:
       description: 'Pruna AI P-Image Edit — an optimised Qwen-based image editing model taking up to 3 reference images. Fast multi-image editing for composition, style transfer, and object manipulation. Refer to inputs as "image 1", "image 2" in the prompt.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: P-Image Edit'
       operationId: createImage_p_image_edit
       requestBody:
         content:
@@ -114,6 +197,7 @@ paths:
                     type: string
                   maxItems: 3
                   type: array
+                  x-bpx-media: image
                 seed:
                   description: Seed for reproducible generation. Omit for random.
                   type: integer
@@ -145,7 +229,10 @@ paths:
       description: 'Pruna AI P-Video — text-to-video; image-to-video with a start frame and an optional end frame; and audio-driven video from a supplied track. 720p or 1080p, 5 or 10 seconds, optional generated audio. Served by our direct Pruna integration.
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: P-Video'
       operationId: createVideo_p_video
       requestBody:
         content:
@@ -163,9 +250,11 @@ paths:
                 audio:
                   description: Optional driving-audio track (MP3/WAV/FLAC). Provide a public audio URL or an uploaded-file URL from POST /v1/uploads (passed by URL, not inlined). When supplied, the video's length matches the audio and `length_seconds` is ignored — which changes the per-second charge, so estimate via POST /v1/cost.
                   type: string
+                  x-bpx-media: audio
                 end_image:
                   description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
                   type: string
+                  x-bpx-media: image
                 generate_audio:
                   default: true
                   description: Keep the model's generated audio in the output (default true; no price impact).
@@ -173,6 +262,7 @@ paths:
                 image:
                   description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
                   type: string
+                  x-bpx-media: image
                 length_seconds:
                   default: 5
                   description: Video length in seconds. Ignored when `audio` is supplied.
@@ -215,8 +305,170 @@ paths:
       summary: Generate video with P-Video
       tags:
       - Pruna AI
+  /videos/p-video-2-pro:
+    post:
+      description: 'Pruna AI P-Video 2 Pro — text-to-video, and image-to-video from a first frame, a last frame, or both. 480p or 768p, any length from 5 to 15 seconds, 24 fps, with generated audio. Three generation modes set the price with the resolution: `cost` (cheapest, and the fastest), `speed` (the default) and `quality` (the most detailed and the slowest). Billed per second of output; see `mode_pricing` in GET /v1/models or POST /v1/cost.
+
+
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: P-Video 2 Pro'
+      operationId: createVideo_p_video_2_pro
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                aspect_ratio:
+                  default: '16:9'
+                  description: Aspect ratio for text-to-video. With a frame image the image sets the shape and this is ignored.
+                  enum:
+                  - '16:9'
+                  - '9:16'
+                  - '4:3'
+                  - '3:4'
+                  - '3:2'
+                  - '2:3'
+                  - '1:1'
+                  type: string
+                end_image:
+                  description: Optional last frame. With `image` the video moves between the two frames; on its own the video ends on it. Same input forms as `image`.
+                  type: string
+                  x-bpx-media: image
+                image:
+                  description: Optional first frame for image-to-video; the video starts from it and follows its framing. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads.
+                  type: string
+                  x-bpx-media: image
+                length_seconds:
+                  default: 5
+                  description: Video length in seconds, any whole number from 5 to 15.
+                  maximum: 15
+                  minimum: 5
+                  type: integer
+                mode:
+                  default: speed
+                  description: 'Generation mode, which sets the price together with `resolution`: `cost` is the cheapest and also the fastest (about 20 s for 5 s of video), `speed` is the default (about 70 s), `quality` is the most detailed and the slowest (about 85 s). Credits per second: see `mode_pricing` in GET /v1/models.'
+                  enum:
+                  - cost
+                  - speed
+                  - quality
+                  type: string
+                prompt:
+                  description: Text description of the video, including any sound you want to hear.
+                  type: string
+                resolution:
+                  default: 768p
+                  description: 'Output resolution: 480p (832x480 at 16:9) or 768p (1344x768 at 16:9). Sets the price together with `mode`.'
+                  enum:
+                  - 480p
+                  - 768p
+                  type: string
+                seed:
+                  description: Seed for reproducible generation. Omit for random.
+                  type: integer
+              required:
+              - prompt
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVideoResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate video with P-Video 2 Pro
+      tags:
+      - Pruna AI
 components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
   schemas:
+    CreateVideoResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -250,6 +502,43 @@ components:
       required:
       - error
       type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
       properties:
@@ -269,58 +558,6 @@ components:
       - error
       - restriction_reason
       type: object
-    CreateVideoResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-    CreateImageResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          example: img_a1b2c3d4e5f6
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Motion Control API
   version: '2026-06-20'
 servers:
@@ -52,7 +129,10 @@ paths:
       description: 'BytePlus DreamActor M2.0 — drives the character in an image to replicate the motion, facial expressions, and lip movements from a reference video, preserving the subject and background of the image. Works for real people, animation, and pets. 720p MP4 output. Priced per second of the reference video (50 credits/second).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/motion-control/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/motion-control/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: DreamActor M2.0'
       operationId: createMotion_dreamactor_m2_0
       requestBody:
         content:
@@ -62,6 +142,7 @@ paths:
                 image:
                   description: Character image to animate (the subject). A public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. jpg/png, max 4.7 MB; 480x480 to 1920x1080 (larger images are scaled down).
                   type: string
+                  x-bpx-media: image
                 trim_intro:
                   default: true
                   description: Trim the 1-second transition at the start of the output video.
@@ -69,6 +150,7 @@ paths:
                 video:
                   description: Motion reference video whose movement drives the character. A public video URL or an uploaded-file URL from POST /v1/uploads. mp4/webm, 3-30 seconds, up to 30 MB.
                   type: string
+                  x-bpx-media: video
               required:
               - image
               - video
@@ -97,7 +179,10 @@ paths:
       description: 'Kling 3.0 motion control (standard tier) — transfers the motion from a reference video onto a character image. Priced per second of the reference video (130 credits/second).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/motion-control/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/motion-control/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: Kling 3.0 Motion Control Standard'
       operationId: createMotion_kling_3_motion_control_std
       requestBody:
         content:
@@ -114,6 +199,7 @@ paths:
                 image:
                   description: Character image to animate. A public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. jpg/png/webp.
                   type: string
+                  x-bpx-media: image
                 keep_original_sound:
                   default: true
                   description: Keep the original audio from the reference video.
@@ -125,6 +211,7 @@ paths:
                 video:
                   description: Motion reference video whose movement drives the character. A public video URL or an uploaded-file URL from POST /v1/uploads. mp4/webm, 3-30 seconds (max 10 seconds when character_orientation is "image"), up to 30 MB.
                   type: string
+                  x-bpx-media: video
               required:
               - image
               - video
@@ -149,6 +236,65 @@ paths:
       tags:
       - Motion Control
 components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
   schemas:
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
@@ -161,25 +307,6 @@ components:
       - failed
       - timeout
       type: string
-    CreateMotionResponse:
-      properties:
-        credits:
-          description: Total price of this job (seconds x the model's per-second rate).
-          type: integer
-        id:
-          description: Opaque job id (`mtn_...`) — use it to poll status.
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        seconds:
-          description: Billed duration — the reference video's length
-          rounded up.: null
-          type: integer
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
     Error:
       properties:
         error:
@@ -201,6 +328,80 @@ components:
           type: object
       required:
       - error
+      type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    CreateMotionResponse:
+      properties:
+        credits:
+          description: Total price of this job (seconds x the model's per-second rate).
+          type: integer
+        id:
+          description: Opaque job id (`mtn_...`) — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        seconds:
+          description: Billed duration — the reference video's length, rounded up.
+          type: integer
+        status:
+          $ref: '#/components/schemas/JobStatus'
       type: object
     MotionJob:
       properties:
@@ -225,63 +426,20 @@ components:
           - failed
           - canceled
           type: string
+        video_codec:
+          description: Codec of the MP4 at `video_url`; present once `status=succeeded`. Video upscales are `h265` (HEVC, 10-bit); motion-control outputs are `h264`.
+          enum:
+          - h264
+          - h265
+          type: string
+        video_codec_note:
+          description: Present only when `video_codec` is `h265` — a short explanation of where H.265 plays and what to do when it does not.
+          type: string
         video_url:
           description: Short-lived presigned URL; present once `status=succeeded`.
           format: uri
           type: string
       type: object
-    ModerationBlocked:
-      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
-      properties:
-        error:
-          description: Human-readable explanation of the block.
-          type: string
-        restriction_reason:
-          description: Stable machine-readable block reason.
-          enum:
-          - input_csam
-          - input_explicit_adult
-          - input_upload_nudity
-          - input_celebrity_likeness
-          - strict_model_nsfw
-          type: string
-      required:
-      - error
-      - restriction_reason
-      type: object
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

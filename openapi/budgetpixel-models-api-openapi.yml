@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Models API
   version: '2026-06-20'
 servers:
@@ -105,30 +182,6 @@ paths:
       - Models
 components:
   responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: The requested job was not found.
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
     BadRequest:
       content:
         application/json:
@@ -137,92 +190,57 @@ components:
             - $ref: '#/components/schemas/Error'
             - $ref: '#/components/schemas/ModerationBlocked'
       description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
-  schemas:
-    Error:
-      properties:
-        error:
-          properties:
-            code:
-              description: Stable machine-readable code.
-              example: model_not_available
-              type: string
-            message:
-              type: string
-            type:
-              description: Error category.
-              example: invalid_request_error
-              type: string
-          required:
-          - type
-          - code
-          - message
-          type: object
-      required:
-      - error
-      type: object
-    ModerationBlocked:
-      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
-      properties:
-        error:
-          description: Human-readable explanation of the block.
-          type: string
-        restriction_reason:
-          description: Stable machine-readable block reason.
-          enum:
-          - input_csam
-          - input_explicit_adult
-          - input_upload_nudity
-          - input_celebrity_likeness
-          - strict_model_nsfw
-          type: string
-      required:
-      - error
-      - restriction_reason
-      type: object
-    Model:
-      properties:
-        credits_per_generation:
-          description: Per-output-image cost (images) or per-track cost (music). 0 for per-second models (video, sound effects) — see credits_per_unit.
-          example: 45
-          type: integer
-        credits_per_unit:
-          description: Per-unit cost for metered models (e.g. per second of video). For resolution-priced models this is the default resolution's rate.
-          example: 220
-          type: integer
-        min_billable_seconds:
-          description: Billing floor for per-second audio models (sound effects, Sonilo Music) — cost = credits_per_unit × max(min_billable_seconds, seconds rounded up). Absent for flat-priced models.
-          example: 3
-          type: integer
-        name:
-          example: flux-2-klein
-          type: string
-        resolution_pricing:
-          additionalProperties:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
             type: integer
-          description: For video models whose per-second rate varies by resolution, a map of resolution to per-second cost. Absent when pricing is flat.
-          example:
-            4k: 1250
-            480p: 100
-            720p: 220
-            1080p: 550
-          type: object
-        type:
-          enum:
-          - image
-          - video
-          - audio
-          type: string
-        unit_type:
-          description: The unit `credits_per_unit` applies to.
-          enum:
-          - generation
-          - second
-          type: string
-      required:
-      - name
-      - type
-      - credits_per_generation
-      type: object
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
+  schemas:
     CostEstimate:
       description: The credit cost of a request. The real charge is always ≤ `credits` (failures cost nothing; sequential image jobs may use fewer images).
       properties:
@@ -255,6 +273,157 @@ components:
       - type
       - credits
       - exact
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    Model:
+      properties:
+        credits_per_generation:
+          description: Per-output-image cost (images) or per-track cost (music). For image models priced by output size this is the default size's rate — see resolution_pricing. 0 for per-second models (video, sound effects) — see credits_per_unit.
+          example: 45
+          type: integer
+        credits_per_unit:
+          description: Per-unit cost for metered models (e.g. per second of video). For resolution-priced models this is the default resolution's rate.
+          example: 220
+          type: integer
+        min_billable_seconds:
+          description: Billing floor for per-second audio models (sound effects, Sonilo Music) — cost = credits_per_unit × max(min_billable_seconds, seconds rounded up). Absent for flat-priced models.
+          example: 3
+          type: integer
+        name:
+          example: flux-2-klein
+          type: string
+        option_pricing:
+          additionalProperties:
+            type: integer
+          description: For image models with paid on/off options, a map of the option's parameter name to the credits it adds per image when enabled (e.g. nano-banana-2.1 `google_search` 10, `image_search` 20). Each amount is the option on its own; the parameter's description says when two options cost less together. Absent when the model has no paid options.
+          example:
+            google_search: 10
+            image_search: 20
+          type: object
+        resolution_codecs:
+          additionalProperties:
+            enum:
+            - h264
+            - h265
+            type: string
+          description: For video models where some resolution delivers H.265 (HEVC) instead of H.264, a map of resolution to the output codec (`h264` or `h265`). Absent when every resolution delivers H.264. H.265 outputs are 10-bit and do not play in every browser — see `video_codec` on the job status.
+          example:
+            480p: h264
+            720p: h264
+            1080p: h265
+          type: object
+        resolution_pricing:
+          additionalProperties:
+            type: integer
+          description: For models whose rate varies by resolution or output size, a map of resolution to cost — per second for video models, per image for image models (keys are the model's `size` / `resolution` values, e.g. flux-3-image 768px / 1K / 1.5K / 2K / 4K). Absent when pricing is flat.
+          example:
+            4k: 1250
+            480p: 100
+            720p: 220
+            1080p: 550
+          type: object
+        size_pricing:
+          additionalProperties:
+            type: integer
+          description: For models sold in sizes (the depth map's small / base / large), a map of size to its credits per unit (per second of input video for `video-depth`). Absent for every other model.
+          example:
+            base: 30
+            large: 40
+            small: 20
+          type: object
+        type:
+          enum:
+          - image
+          - video
+          - audio
+          type: string
+        unit_type:
+          description: The unit `credits_per_unit` applies to.
+          enum:
+          - generation
+          - second
+          type: string
+      required:
+      - name
+      - type
+      - credits_per_generation
       type: object
   securitySchemes:
     ApiKeyAuth:

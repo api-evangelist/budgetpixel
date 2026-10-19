@@ -1,0 +1,449 @@
+openapi: 3.2.0
+info:
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
+  title: BudgetPixel 3D Models API
+  version: '2026-06-20'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Image-to-3D models — a picture in, a textured 3D model (GLB, plus FBX/USDZ/STL on Meshy) out
+  name: 3D Models
+paths:
+  /3d/{job_id}:
+    get:
+      description: 'Poll every 15-30 seconds until `status` is `succeeded` (usually 2-5 minutes).
+
+        The model is returned as short-lived signed URLs (valid for several hours;
+
+        re-call this endpoint for fresh URLs anytime — the underlying files are
+
+        deleted about 24h after generation). `model_url` is the full GLB; `files`
+
+        lists every format the model produced; `preview_model_url` is a light,
+
+        compressed GLB (EXT_meshopt_compression, WebP textures) for showing the
+
+        model in a web viewer.'
+      operationId: get3DModel
+      parameters:
+      - description: The job id returned by the create endpoint.
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model3DJob'
+          description: Current job status. The file URLs are populated once succeeded.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      summary: Get 3D model job status
+      tags:
+      - 3D Models
+  /3d/meshy-7.1:
+    post:
+      description: 'Image to 3D: a light textured model (~30K triangles) in GLB, FBX, USDZ and STL, optionally rigged and animated for humanoid characters. About 2 minutes. 1600 credits textured.
+
+
+        **Asynchronous.** Returns a job `id` (the model is not in this response). Poll `GET /v1/3d/{id}` every 15-30 seconds until `status` is `succeeded` (usually 2-5 minutes) — the GLB is that response''s `model_url` and every format is in `files`. Charged on success only; `POST /v1/cost` quotes the exact price for your options.
+
+
+        Examples, sample output and pricing: Meshy 7.1'
+      operationId: create3DModel_meshy_7_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                animation:
+                  default: false
+                  description: Also return an animated model (+160 credits). Needs rigging.
+                  type: boolean
+                image:
+                  description: 'The picture to turn into a 3D model: a public URL, a data URI, raw base64, or a URL from POST /v1/uploads.'
+                  type: string
+                  x-bpx-media: image
+                rigging:
+                  default: false
+                  description: Rig a humanoid character with walk and run clips (+270 credits). Humanoid characters only.
+                  type: boolean
+                texture:
+                  default: true
+                  description: Paint the model (true) or return the plain shape (false, 1080 credits).
+                  type: boolean
+              required:
+              - image
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateModel3DResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate a 3D model with Meshy 7.1
+      tags:
+      - 3D Models
+  /3d/tripo-h3.1:
+    post:
+      description: 'Image to 3D: a textured GLB with PBR materials (base color, normal, roughness, metalness). Most faithful to the picture, including flat cartoons. About 4 minutes. 400 credits textured.
+
+
+        **Asynchronous.** Returns a job `id` (the model is not in this response). Poll `GET /v1/3d/{id}` every 15-30 seconds until `status` is `succeeded` (usually 2-5 minutes) — the GLB is that response''s `model_url` and every format is in `files`. Charged on success only; `POST /v1/cost` quotes the exact price for your options.
+
+
+        Examples, sample output and pricing: Tripo H3.1'
+      operationId: create3DModel_tripo_h3_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                detailed_geometry:
+                  default: false
+                  description: Finer shape detail (+270 credits).
+                  type: boolean
+                image:
+                  description: 'The picture to turn into a 3D model: a public URL, a data URI, raw base64, or a URL from POST /v1/uploads. One subject on a plain or transparent background works best.'
+                  type: string
+                  x-bpx-media: image
+                texture:
+                  default: true
+                  description: Paint the model (true) or return the plain shape (false, 270 credits).
+                  type: boolean
+                texture_quality:
+                  default: standard
+                  description: 'detailed: higher-resolution textures (540 credits instead of 400).'
+                  enum:
+                  - standard
+                  - detailed
+                  type: string
+              required:
+              - image
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateModel3DResponse'
+          description: Job accepted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Generate a 3D model with Tripo H3.1
+      tags:
+      - 3D Models
+components:
+  responses:
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested job was not found.
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
+  schemas:
+    Model3DJob:
+      properties:
+        created_at:
+          format: date-time
+          type: string
+        credits:
+          type: integer
+        error:
+          type: string
+        files:
+          additionalProperties:
+            format: uri
+            type: string
+          description: Every format produced, by kind — `glb` always; Meshy also `fbx`, `usdz`, `stl`, and with rigging `rigged_glb`, `rigged_fbx`, `animation_glb`, `animation_fbx`.
+          type: object
+        id:
+          type: string
+        model:
+          type: string
+        model_url:
+          description: The full 3D model as GLB (signed URL, valid several hours); present once `status=succeeded`.
+          format: uri
+          type: string
+        preview_model_url:
+          description: A light copy of the GLB for web viewers (simplified, meshopt-compressed, WebP textures).
+          format: uri
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        thumbnail_url:
+          description: A rendered picture of the model.
+          format: uri
+          type: string
+      type: object
+    JobStatus:
+      description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
+      enum:
+      - pending
+      - starting
+      - processing
+      - completing
+      - succeeded
+      - failed
+      - timeout
+      type: string
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+    CreateModel3DResponse:
+      properties:
+        credits:
+          description: Credits this job will charge on success (held until it finishes).
+          type: integer
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http

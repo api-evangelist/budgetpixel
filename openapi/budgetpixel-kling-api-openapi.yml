@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Kling API
   version: '2026-06-20'
 servers:
@@ -22,7 +99,10 @@ paths:
       description: 'Kling AI v3 — image generation with strong prompt adherence and aesthetics. Text-to-image and single-reference-image generation at 1K/2K. Billing: 35 credits per image.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: Kling v3'
       operationId: createImage_kling_v3
       requestBody:
         content:
@@ -45,6 +125,7 @@ paths:
                 image:
                   description: Optional reference image the generation should follow (subject/feature reference). Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-image.
                   type: string
+                  x-bpx-media: image
                 negative_prompt:
                   description: What to avoid in the generated image. Text-to-image only — ignored when "image" is provided.
                   type: string
@@ -91,7 +172,10 @@ paths:
       description: 'Kling AI v3 Omni — unified text-to-image and image editing with multi-reference composition from up to 9 reference images and up to 4K output. Billing: 35 credits per image at 1K/2K, 60 at 4K.
 
 
-        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).'
+        **Asynchronous.** Returns a job `id` (the image is not in this response). Poll `GET /v1/images/{id}` until `status` is `succeeded` — the generated image URLs are in that response''s `images` array (each `{ url, position }`).
+
+
+        Examples, sample output and pricing: Kling v3 Omni'
       operationId: createImage_kling_v3_omni
       requestBody:
         content:
@@ -126,6 +210,7 @@ paths:
                     type: string
                   maxItems: 9
                   type: array
+                  x-bpx-media: image
                 size:
                   default: 2K
                   description: Output resolution tier. 1K/2K bill 35 credits per image; 4K bills 60.
@@ -161,7 +246,10 @@ paths:
       description: 'Kuaishou Kling 3.0 Turbo — fast text-to-video and image-to-video (start frame only) with native audio always included. 720p or 1080p, priced per resolution (see `resolution_pricing` in GET /v1/models). Any duration from 3 to 15 seconds.
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: Kling 3.0 Turbo'
       operationId: createVideo_kling_3_0_turbo
       requestBody:
         content:
@@ -179,6 +267,7 @@ paths:
                 image:
                   description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
                   type: string
+                  x-bpx-media: image
                 length_seconds:
                   default: 5
                   description: Video length in seconds (3–15).
@@ -222,7 +311,10 @@ paths:
       description: 'Kuaishou Kling v2.6 Pro — text-to-video, plus image-to-video with a start frame and an optional end frame. Optional audio.
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: Kling v2.6 Pro'
       operationId: createVideo_kling_v2_6_pro
       requestBody:
         content:
@@ -240,12 +332,14 @@ paths:
                 end_image:
                   description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
                   type: string
+                  x-bpx-media: image
                 generate_audio:
                   description: Generate audio with the video.
                   type: boolean
                 image:
                   description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
                   type: string
+                  x-bpx-media: image
                 length_seconds:
                   default: 5
                   description: Video length in seconds.
@@ -283,7 +377,10 @@ paths:
       description: 'Kuaishou Kling V3 Omni — text-to-video; image-to-video (start + optional end frame); reference-images-to-video (up to 7 images); and video-to-video editing (supply a `video`). 720p / 1080p / 4K, priced per resolution and per audio (see `resolution_pricing` in GET /v1/models and POST /v1/cost). Video-edit carries its own per-second rate and never has audio (the model forces sound off with an input video).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: Kling V3 Omni'
       operationId: createVideo_kling_v3_omni_video
       requestBody:
         content:
@@ -301,12 +398,14 @@ paths:
                 end_image:
                   description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
                   type: string
+                  x-bpx-media: image
                 generate_audio:
                   description: Generate audio with the video. Raises the 720p/1080p per-second rate (no price impact at 4K); unavailable on video-edit.
                   type: boolean
                 image:
                   description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video. Can't be combined with `reference_images`.
                   type: string
+                  x-bpx-media: image
                 length_seconds:
                   default: 5
                   description: Video length in seconds (3–15). For video-edit, set this to the input video's rounded duration.
@@ -322,6 +421,7 @@ paths:
                     type: string
                   maxItems: 7
                   type: array
+                  x-bpx-media: image
                 resolution:
                   default: 720p
                   description: Output resolution. Pricing varies by resolution — see `resolution_pricing` in GET /v1/models.
@@ -333,6 +433,7 @@ paths:
                 video:
                   description: 'Optional input video for video-to-video editing. Provide a public video URL or an uploaded-file URL from POST /v1/uploads (videos are passed by URL, not inlined). When set, the request runs in video-edit mode: up to 4 `reference_images` may guide the edit, start/end frames are not supported, audio is always off, and the output length matches the input video — set `length_seconds` to the input''s duration rounded to whole seconds (3–15), which is what billing uses.'
                   type: string
+                  x-bpx-media: video
               required:
               - prompt
               type: object
@@ -360,7 +461,10 @@ paths:
       description: 'Kuaishou Kling 3.0 at native 4K resolution — text-to-video, plus image-to-video with a start frame and an optional end frame. Any duration from 3 to 15 seconds. Optional audio (no price impact at 4K).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: Kling 3.0 4K'
       operationId: createVideo_kling_v3_0_4k
       requestBody:
         content:
@@ -378,12 +482,14 @@ paths:
                 end_image:
                   description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
                   type: string
+                  x-bpx-media: image
                 generate_audio:
                   description: Generate audio with the video. Raises the per-second rate on Standard/Pro (no price impact at 4K) — estimate via POST /v1/cost.
                   type: boolean
                 image:
                   description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
                   type: string
+                  x-bpx-media: image
                 length_seconds:
                   default: 5
                   description: Video length in seconds (3–15).
@@ -420,7 +526,10 @@ paths:
       description: 'Kuaishou Kling 3.0 in Professional mode (1080p) — text-to-video, plus image-to-video with a start frame and an optional end frame. Any duration from 3 to 15 seconds. Optional audio (raises the per-second rate — estimate via POST /v1/cost).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: Kling 3.0 Pro'
       operationId: createVideo_kling_v3_0_pro
       requestBody:
         content:
@@ -438,12 +547,14 @@ paths:
                 end_image:
                   description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
                   type: string
+                  x-bpx-media: image
                 generate_audio:
                   description: Generate audio with the video. Raises the per-second rate on Standard/Pro (no price impact at 4K) — estimate via POST /v1/cost.
                   type: boolean
                 image:
                   description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
                   type: string
+                  x-bpx-media: image
                 length_seconds:
                   default: 5
                   description: Video length in seconds (3–15).
@@ -480,7 +591,10 @@ paths:
       description: 'Kuaishou Kling 3.0 in Standard mode (720p) — text-to-video, plus image-to-video with a start frame and an optional end frame. Any duration from 3 to 15 seconds. Optional audio (raises the per-second rate — estimate via POST /v1/cost).
 
 
-        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.'
+        **Asynchronous.** Returns a job `id` (the video is not in this response). Poll `GET /v1/videos/{id}` until `status` is `succeeded` — the video URL is in that response''s `video_url`.
+
+
+        Examples, sample output and pricing: Kling 3.0 Standard'
       operationId: createVideo_kling_v3_0_standard
       requestBody:
         content:
@@ -498,12 +612,14 @@ paths:
                 end_image:
                   description: Optional end frame, used together with `image` (the start frame) to interpolate the video between the two frames. Same input forms as `image`.
                   type: string
+                  x-bpx-media: image
                 generate_audio:
                   description: Generate audio with the video. Raises the per-second rate on Standard/Pro (no price impact at 4K) — estimate via POST /v1/cost.
                   type: boolean
                 image:
                   description: Optional start frame for image-to-video. Provide a public image URL, a data URI, raw base64, or an uploaded-file URL from POST /v1/uploads. Omit for text-to-video.
                   type: string
+                  x-bpx-media: image
                 length_seconds:
                   default: 5
                   description: Video length in seconds (3–15).
@@ -536,7 +652,85 @@ paths:
       tags:
       - Kling
 components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
   schemas:
+    CreateVideoResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
+    CreateImageResponse:
+      properties:
+        id:
+          description: Opaque job id — use it to poll status.
+          example: img_a1b2c3d4e5f6
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -570,6 +764,43 @@ components:
       required:
       - error
       type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
       properties:
@@ -589,58 +820,6 @@ components:
       - error
       - restriction_reason
       type: object
-    CreateVideoResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-    CreateImageResponse:
-      properties:
-        id:
-          description: Opaque job id — use it to poll status.
-          example: img_a1b2c3d4e5f6
-          type: string
-        message:
-          type: string
-        model:
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-      type: object
-  responses:
-    Forbidden:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Authenticated but not permitted (plan gate, ownership, account restriction). Content-moderation blocks are 400, not 403.
-    TooManyRequests:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    BadRequest:
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

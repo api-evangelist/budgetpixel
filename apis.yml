@@ -854,14 +854,182 @@ apis:
     url: conventions/budgetpixel-conventions.yml
   - type: LLMsTxt
     url: https://docs.budgetpixel.com/llms.txt
-- aid: budgetpixel:budgetpixel-mini-max-api
-  name: BudgetPixel Mini Max API
-  description: The Mini Max API from BudgetPixel — 1 operation(s) for mini max.
+- aid: budgetpixel:budgetpixel-3d-models-api
+  name: BudgetPixel 3D Models API
+  description: >-
+    Image-to-3D models — a picture in, a textured 3D model (GLB, plus FBX/USDZ/STL on Meshy) out
   humanURL: https://budgetpixel.com/mcp
   baseURL: https://mcp.budgetpixel.com/mcp
   tags:
-  - MiniMax
-  tags_raw:
+  - 3D Models
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-3d-models-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-depth-maps-api
+  name: BudgetPixel Depth Maps API
+  description: >-
+    Turn a video into a depth map video to guide other video models with its structure and motion
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
+  - Depth Maps
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-depth-maps-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-meta-api
+  name: BudgetPixel Meta API
+  description: The Meta API from BudgetPixel — 1 operation(s) for meta.
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
+  - Meta
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-meta-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-stock-images-api
+  name: BudgetPixel Stock Images API
+  description: Search the free stock image library — available on every plan, including Free
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
+  - Stock Images
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-stock-images-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-stock-music-api
+  name: BudgetPixel Stock Music API
+  description: Search the free background music library — available on every plan, including Free
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
+  - Stock Music
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-stock-music-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-stock-sound-effects-api
+  name: BudgetPixel Stock Sound Effects API
+  description: Search the free sound effect library — available on every plan, including Free
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
+  - Stock Sound Effects
+  properties:
+  - type: OpenAPI
+    url: openapi/budgetpixel-stock-sound-effects-api-openapi.yml
+  - type: Documentation
+    url: https://docs.budgetpixel.com/introduction
+  - type: APIReference
+    url: https://docs.budgetpixel.com/api-reference
+  - type: GettingStarted
+    url: https://docs.budgetpixel.com/quickstart
+  - type: Authentication
+    url: https://docs.budgetpixel.com/authentication
+  - type: RateLimits
+    url: rate-limits/budgetpixel-rate-limits.yml
+  - type: ErrorCatalog
+    url: errors/budgetpixel-problem-types.yml
+  - type: DataModel
+    url: data-model/budgetpixel-data-model.yml
+  - type: Conventions
+    url: conventions/budgetpixel-conventions.yml
+  - type: LLMsTxt
+    url: https://docs.budgetpixel.com/llms.txt
+- aid: budgetpixel:budgetpixel-mini-max-api
+  name: BudgetPixel Mini Max API
+  description: The Mini Max API from BudgetPixel — 2 operation(s) for mini max.
+  humanURL: https://budgetpixel.com/mcp
+  baseURL: https://mcp.budgetpixel.com/mcp
+  tags:
   - Mini Max
   properties:
   - type: OpenAPI

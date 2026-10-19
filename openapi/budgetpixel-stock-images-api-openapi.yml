@@ -1,0 +1,547 @@
+openapi: 3.2.0
+info:
+  contact:
+    email: support@budgetpixel.com
+    name: BudgetPixel Support
+  description: 'The BudgetPixel developer API for programmatic image, video, music and
+
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
+  title: BudgetPixel Stock Images API
+  version: '2026-06-20'
+servers:
+- description: Production
+  url: https://api.budgetpixel.com/v1
+security:
+- ApiKeyAuth: []
+tags:
+- description: Search the free stock image library — available on every plan, including Free
+  name: Stock Images
+paths:
+  /stock/images:
+    get:
+      description: 'Search BudgetPixel''s free stock image library (the images at
+
+        budgetpixel.com/images): AI-generated photos,
+
+        illustrations, backgrounds, wallpapers and textures, each reviewed before it is
+
+        listed. Search only — nothing is generated when a query comes up empty.
+
+
+        **Plans.** Available on **every plan, including Free**. The stock searches
+
+        (images, sound effects, music) are the only endpoints a Free plan''s API key can
+
+        call.
+
+
+        **Pricing.** **10 credits per search**, charged when the search succeeds,
+
+        including a search that matches nothing. Invalid parameters are refused with a
+
+        `400` and cost nothing. `POST /v1/cost` with `{"model": "stock-image-search"}`
+
+        quotes the price (on paid plans).
+
+
+        **Licence.** Every image is licensed
+
+        CC BY 4.0. Wherever you use one,
+
+        credit it — each result carries a ready-made credit line (`attribution.text`, or
+
+        `attribution.html` for web pages) that meets the licence. Download the files
+
+        rather than hotlinking the URLs from production apps.
+
+
+        Search matches your words in each image''s title, tags, alt text, prompt and search
+
+        keywords, best matches first. When a text query has few word matches, results
+
+        found by meaning are added on the first page.
+
+
+        Besides the standard `/v1` limits, searches are capped at **60 per minute per
+
+        account**.'
+      operationId: searchStockImages
+      parameters:
+      - description: What the image should show, e.g. `misty pine forest at sunrise`. Up to 200 characters. Omit to browse (combine with `category`).
+        in: query
+        name: query
+        schema:
+          maxLength: 200
+          type: string
+      - in: query
+        name: category
+        schema:
+          enum:
+          - nature
+          - animals
+          - food
+          - travel
+          - transportation
+          - architecture
+          - business
+          - industry
+          - technology
+          - people
+          - education
+          - music
+          - art
+          - backgrounds
+          - wallpapers
+          - textures
+          - abstract
+          - holidays
+          - science
+          - health
+          - sports
+          type: string
+      - in: query
+        name: orientation
+        schema:
+          enum:
+          - landscape
+          - portrait
+          - square
+          type: string
+      - description: Dominant colour.
+        in: query
+        name: color
+        schema:
+          enum:
+          - red
+          - orange
+          - yellow
+          - green
+          - turquoise
+          - blue
+          - purple
+          - pink
+          - white
+          - gray
+          - black
+          - brown
+          type: string
+      - description: '`photo` for photographs; `illustration` for everything else (illustration, 3D, painting, vector).'
+        in: query
+        name: type
+        schema:
+          enum:
+          - photo
+          - illustration
+          type: string
+      - description: '`true` returns cut-outs only: PNG files with a transparent background, for stickers, overlays and compositing. Leave it out for every image.'
+        in: query
+        name: transparent
+        schema:
+          type: boolean
+      - description: '`popular` (default — with a query, best matches first), `newest`, or `top` (highest rated).'
+        in: query
+        name: sort
+        schema:
+          default: popular
+          enum:
+          - popular
+          - newest
+          - top
+          type: string
+      - in: query
+        name: limit
+        schema:
+          default: 20
+          maximum: 20
+          minimum: 1
+          type: integer
+      - description: Results to skip. The next page is `offset + limit`; each page is a new search.
+        in: query
+        name: offset
+        schema:
+          default: 0
+          maximum: 5000
+          minimum: 0
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockImageList'
+          description: Matching images.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Insufficient credits for a search (10 credits).
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: Search free stock images
+      tags:
+      - Stock Images
+components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
+  schemas:
+    StockImage:
+      properties:
+        ai_generated:
+          example: true
+          type: boolean
+        alt_text:
+          description: One-sentence description for screen readers.
+          type: string
+        attribution:
+          description: The credit line the licence requires wherever the image is used.
+          properties:
+            html:
+              description: The same credit as HTML links, for web pages.
+              type: string
+            required:
+              example: true
+              type: boolean
+            text:
+              example: “Mountain Goat On Rocky Ledge” by BudgetPixel AI (https://budgetpixel.com/images/mountain-goat-on-rocky-ledge-33643c7a) — CC BY 4.0
+              type: string
+          type: object
+        category:
+          type: string
+        colors:
+          description: Dominant colours.
+          items:
+            type: string
+          type: array
+        created_at:
+          format: date-time
+          type: string
+        description:
+          type: string
+        downloads:
+          type: integer
+        height:
+          description: Original height in pixels.
+          type: integer
+        id:
+          format: uuid
+          type: string
+        license:
+          properties:
+            code:
+              example: CC-BY-4.0
+              type: string
+            name:
+              example: CC BY 4.0
+              type: string
+            url:
+              example: https://creativecommons.org/licenses/by/4.0/
+              type: string
+          type: object
+        model:
+          description: The model that generated the image.
+          type: string
+        orientation:
+          enum:
+          - landscape
+          - portrait
+          - square
+          type: string
+        page_url:
+          description: The image's page on budgetpixel.com — the link its credit line points to.
+          example: https://budgetpixel.com/images/mountain-goat-on-rocky-ledge-33643c7a
+          type: string
+        prompt:
+          description: The prompt the image was generated from.
+          type: string
+        quality_score:
+          description: Review score out of 10.
+          type:
+          - number
+          - 'null'
+        style:
+          enum:
+          - photo
+          - illustration
+          - 3d
+          - painting
+          - vector
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+        title:
+          example: Mountain Goat On Rocky Ledge
+          type: string
+        transparent:
+          description: 'A cut-out: its `original`, `large` and `small` files are PNG with a transparent background.'
+          type: boolean
+        urls:
+          description: Direct file URLs. `large`/`small` are the long edge in pixels.
+          properties:
+            large:
+              description: 1280 px JPG (PNG for a cut-out).
+              type: string
+            large_webp:
+              description: 1280 px WebP.
+              type: string
+            original:
+              description: JPG at the original size (PNG for a cut-out).
+              type: string
+            preview:
+              description: 'Cut-outs only: a JPG of the picture on a plain backdrop.'
+              type: string
+            small:
+              description: 640 px JPG (PNG for a cut-out).
+              type: string
+            small_webp:
+              description: 640 px WebP.
+              type: string
+          type: object
+        width:
+          description: Original width in pixels.
+          type: integer
+      type: object
+    StockImageList:
+      properties:
+        credits_charged:
+          example: 10
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/StockImage'
+          type: array
+        has_more:
+          description: More results exist past this page.
+          type: boolean
+        limit:
+          type: integer
+        object:
+          enum:
+          - list
+          type: string
+        offset:
+          type: integer
+        total:
+          description: Total matching images.
+          type: integer
+      required:
+      - object
+      - data
+      - total
+      - limit
+      - offset
+      - has_more
+      - credits_charged
+      type: object
+    Error:
+      properties:
+        error:
+          properties:
+            code:
+              description: Stable machine-readable code.
+              example: model_not_available
+              type: string
+            message:
+              type: string
+            type:
+              description: Error category.
+              example: invalid_request_error
+              type: string
+          required:
+          - type
+          - code
+          - message
+          type: object
+      required:
+      - error
+      type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
+    ModerationBlocked:
+      description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
+      properties:
+        error:
+          description: Human-readable explanation of the block.
+          type: string
+        restriction_reason:
+          description: Stable machine-readable block reason.
+          enum:
+          - input_csam
+          - input_explicit_adult
+          - input_upload_nudity
+          - input_celebrity_likeness
+          - strict_model_nsfw
+          type: string
+      required:
+      - error
+      - restriction_reason
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      bearerFormat: bpx_live_*
+      description: 'API key as a bearer token: Authorization: Bearer bpx_live_xxx'
+      scheme: bearer
+      type: http

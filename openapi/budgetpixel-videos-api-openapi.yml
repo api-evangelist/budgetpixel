@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Videos API
   version: '2026-06-20'
 servers:
@@ -21,9 +98,28 @@ paths:
     get:
       description: 'Poll until `status` is `succeeded`. The generated video is returned as a
 
-        short-lived signed `video_url` (valid for several hours; re-call for a fresh
+        signed `video_url`, valid for at least 6 hours; call this endpoint again for a
 
-        URL anytime — the underlying object is deleted 24h after generation).'
+        fresh one at any time until `expires_at`, 24 hours after the job was created.
+
+        After that the file is deleted, `expired` is `true` and no URL is returned.
+
+
+        Every output is an MP4, and `video_codec` says which codec is inside. Most
+
+        models and resolutions deliver H.264. A few high-definition tiers deliver
+
+        H.265 (HEVC, 10-bit) exactly as the model produced it — currently SeeDance
+
+        2.5 at 1080p and SeeDance 2.0 at 4K (`resolution_codecs` in GET /v1/models
+
+        is the live list). H.265 plays in Safari, VLC, QuickTime and on most phones, but a
+
+        browser without a hardware HEVC decoder shows a black frame with audio —
+
+        the file is intact. Check `video_codec` and transcode if your player or
+
+        pipeline needs H.264.'
       operationId: getVideo
       parameters:
       - description: The opaque job id returned by the create endpoint.
@@ -50,6 +146,64 @@ paths:
       - Videos
 components:
   schemas:
+    VideoJob:
+      properties:
+        aspect_ratio:
+          type: string
+        completed_at:
+          format: date-time
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        error_message:
+          type: string
+        expired:
+          description: Present once `status=succeeded`. `true` after `expires_at`; `video_url` is not returned then.
+          type: boolean
+        expires_at:
+          description: Present once `status=succeeded`. When the output is deleted, 24 hours after `created_at`.
+          format: date-time
+          type: string
+        id:
+          description: The job id (the same value `POST /v1/videos/{model}` returned).
+          type: string
+        job_id:
+          deprecated: true
+          description: Same as `id`; kept for older clients.
+          type: string
+        length_seconds:
+          type: integer
+        model:
+          type: string
+        prompt:
+          description: The prompt exactly as you submitted it.
+          type: string
+        resolution:
+          description: The resolution the job ran at.
+          type: string
+        started_at:
+          format: date-time
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        updated_at:
+          format: date-time
+          type: string
+        video_codec:
+          description: Codec of the MP4 at `video_url`; present once `status=succeeded`. Most models and resolutions deliver `h264`. A few high-definition tiers deliver `h265` (HEVC, 10-bit) — see `resolution_codecs` in GET /v1/models.
+          enum:
+          - h264
+          - h265
+          type: string
+        video_codec_note:
+          description: Present only when `video_codec` is `h265` — a short explanation of where H.265 plays and what to do when it does not.
+          type: string
+        video_url:
+          description: Signed URL, valid at least 6 hours (call this endpoint again for a fresh one); present once `status=succeeded`, until `expired` is `true`.
+          format: uri
+          type: string
+      type: object
     JobStatus:
       description: Lifecycle state. `succeeded`/`failed`/`timeout` are terminal.
       enum:
@@ -83,38 +237,13 @@ components:
       required:
       - error
       type: object
-    VideoJob:
-      properties:
-        aspect_ratio:
-          type: string
-        completed_at:
-          format: date-time
-          type: string
-        created_at:
-          format: date-time
-          type: string
-        error_message:
-          type: string
-        id:
-          type: string
-        length_seconds:
-          type: integer
-        model:
-          type: string
-        started_at:
-          format: date-time
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-        updated_at:
-          format: date-time
-          type: string
-        video_url:
-          description: Short-lived presigned URL; present once `status=succeeded`.
-          format: uri
-          type: string
-      type: object
   responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
     Forbidden:
       content:
         application/json:
@@ -127,12 +256,6 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
       description: The requested job was not found.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
   securitySchemes:
     ApiKeyAuth:
       bearerFormat: bpx_live_*

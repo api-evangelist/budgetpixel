@@ -5,7 +5,84 @@ info:
     name: BudgetPixel Support
   description: 'The BudgetPixel developer API for programmatic image, video, music and
 
-    sound-effect generation.'
+    sound-effect generation.
+
+
+    Generation is **asynchronous**: you create a job, then poll its status until it
+
+    reaches a terminal state (`succeeded` / `failed`). You are charged in credits
+
+    only on success — never for failures, timeouts, or content blocked before
+
+    generation.
+
+
+    **Authentication.** All requests require an API key sent as a bearer token:
+
+
+    Authorization: Bearer bpx_live_xxx
+
+
+    Create and manage keys from your BudgetPixel account dashboard. The developer
+
+    API is available on **every paid plan**. On the **Free** plan, API keys can call
+
+    the free library searches only: `GET /v1/stock/images`,
+
+    `GET /v1/stock/sound-effects` and `GET /v1/stock/music`.
+
+
+    **Pricing.** API usage is metered in credits at each model''s published price
+
+    (see `GET /v1/models`), and your plan''s model discounts and active promotions
+
+    apply to API charges exactly as they do on the web — `POST /v1/cost` quotes
+
+    your discounted price. Pro and Ultra plans include a daily free-models
+
+    allowance (a shared pool of free generations per day across qualified image
+
+    models such as FLUX 2 Klein and Qwen-Image) that covers API
+
+    requests too — the standard price applies once the day''s pool is used.
+
+    Other promotional free daily generations remain web/app-only. Failed
+
+    generations are never charged.
+
+
+    **Rate limits.** Requests are limited per minute: **600 requests/min per API
+
+    key** and **1200 requests/min per source IP** (defaults; subject to tuning).
+
+    Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+
+    `X-RateLimit-Reset` (seconds until the window resets). Exceeding a limit
+
+    returns HTTP `429` with a `Retry-After` header — wait that long before
+
+    retrying. Rejected requests still count against the window, so a tight retry
+
+    loop keeps you limited; back off instead. Generation jobs additionally have a
+
+    per-plan concurrency cap (the same one as the web workshop), independent of
+
+    these request limits. `POST /v1/uploads` also has a dedicated **60 uploads/min
+
+    per account** cap (it''s free/unmetered) on top of these limits. Every `429`
+
+    this API returns carries `Retry-After`, including a full concurrency queue
+
+    (a suggested wait) and the monthly spend limit (seconds until the month
+
+    resets).
+
+
+    **Output retention.** Generated files are kept for 24 hours after the job is
+
+    created. Job status responses give the exact time as `expires_at`; after it,
+
+    `expired` is `true` and no download URLs are returned.'
   title: BudgetPixel Social API
   version: '2026-06-20'
 servers:
@@ -14,7 +91,7 @@ servers:
 security:
 - ApiKeyAuth: []
 tags:
-- description: Publish posts to your BudgetPixel feed
+- description: Publish posts to your BudgetPixel feed and enter clan themes
   name: Social
 paths:
   /posts:
@@ -79,7 +156,43 @@ paths:
 
         scoring). Feed and gallery visibility follow that review and your account
 
-        standing; a post hidden by review is not refunded.'
+        standing; a post hidden by review is not refunded.
+
+
+        **License:** pass `license` to choose the post''s content license, exactly like the
+
+        license picker in the site''s post composer: `arr` (All Rights Reserved — the
+
+        default), `cc-by` (Creative Commons Attribution 4.0) or `cc0` (Creative Commons Zero,
+
+        public domain). Omit it and the post is published All Rights Reserved. A Creative
+
+        Commons license is a permanent grant: **the license cannot be changed after
+
+        publishing**, in either direction — deleting the post is the only way to stop
+
+        offering it. An unrecognised value is treated as `arr` rather than rejected; the
+
+        response''s `license` always states what the post was published under.
+
+
+        **Clan themes:** pass `theme_id` to enter the post in a live clan theme, exactly
+
+        like choosing a theme in the site''s post composer. `GET /v1/themes`
+
+        lists the live themes of the clans you own or have joined. Posting to a live theme
+
+        of a clan you haven''t joined joins you to that clan, as it does on the site. The
+
+        theme is checked before anything is fetched or charged: an unknown id returns
+
+        `404 theme_not_found`, a theme that hasn''t started or has ended returns
+
+        `400 theme_not_active`, and a clan you''re banned from (or whose owner you have a
+
+        block with) returns `403 theme_not_permitted`. Theme entries cost the same 10
+
+        credits as any post.'
       operationId: createPost
       requestBody:
         content:
@@ -113,6 +226,14 @@ paths:
                   - Reggae
                   - Soundtrack & Cinematic
                   - Other
+                  type: string
+                license:
+                  default: arr
+                  description: 'Content license for the post: `arr` (All Rights Reserved), `cc-by` (CC BY 4.0) or `cc0` (CC0 1.0). Cannot be changed after publishing.'
+                  enum:
+                  - arr
+                  - cc-by
+                  - cc0
                   type: string
                 lyrics:
                   description: Audio posts only.
@@ -148,6 +269,11 @@ paths:
                 song_name:
                   description: Audio posts only — track title.
                   type: string
+                theme_id:
+                  description: Optional — enter the post in this live clan theme. Get ids from [`GET /v1/themes`](/api-reference/social/list-themes-you-can-post-to) (or the number in a `budgetpixel.com/themes/<id>` URL). Works with any media type.
+                  example: 75
+                  minimum: 1
+                  type: integer
               required:
               - media
               type: object
@@ -171,6 +297,12 @@ paths:
           description: Insufficient credits to publish.
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`theme_not_found` — no theme with that `theme_id`.'
         '409':
           content:
             application/json:
@@ -182,8 +314,67 @@ paths:
       summary: Publish a post
       tags:
       - Social
+  /themes:
+    get:
+      description: 'List the **live clan themes you can enter** with
+
+        `POST /v1/posts` — pass a theme''s `id` as
+
+        `theme_id`. A theme is a time-boxed creative event hosted by a clan
+
+        (`budgetpixel.com/themes/`); entered posts appear on the theme''s page.
+
+
+        Includes every live theme of the clans you **own, moderate, or have joined**,
+
+        with your `role` in each clan. Themes of clans you''re banned from, or whose owner
+
+        you have a block with, are left out. Themes that haven''t started or have ended
+
+        are left out too, since they don''t accept entries.
+
+
+        Ordered by deadline, soonest first (`ends_at`). Returns at most 100 themes.
+
+        **Free** — no credits are charged.'
+      operationId: listThemes
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  themes:
+                    items:
+                      $ref: '#/components/schemas/Theme'
+                    type: array
+                type: object
+          description: The themes you can post to (an empty list when you aren't in any clan with a live theme).
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      summary: List themes you can post to
+      tags:
+      - Social
 components:
   responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Error'
+            - $ref: '#/components/schemas/ModerationBlocked'
+      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Missing or invalid API key.
     Forbidden:
       content:
         application/json:
@@ -194,23 +385,82 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-      description: Rate or queue limit reached. Retry after a short delay.
-    Unauthorized:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Missing or invalid API key.
-    BadRequest:
-      content:
-        application/json:
-          schema:
             oneOf:
             - $ref: '#/components/schemas/Error'
-            - $ref: '#/components/schemas/ModerationBlocked'
-      description: The request was malformed, referenced an unavailable model, or was blocked by input content moderation (moderation blocks carry a `restriction_reason` — see ModerationBlocked).
+            - $ref: '#/components/schemas/QueueFull'
+      description: 'A limit was reached. Every `429` carries `Retry-After` (seconds). The
+
+        per-minute rate limit, the upload limit and the hourly API post cap answer
+
+        with the `Error` envelope, code `rate_limited`. The monthly spend limit answers with
+
+        code `monthly_spend_limit_reached`, and its `Retry-After` counts down to the
+
+        start of next month (raising the limit in the console clears it sooner).
+
+        A full concurrency queue answers with the flat `QueueFull` body (3D jobs:
+
+        the `Error` envelope with code `queue_full`); its `Retry-After` is a
+
+        suggested wait, because a slot frees as soon as one of your running jobs
+
+        finishes.
+
+        '
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            minimum: 1
+            type: integer
   schemas:
+    CreatePostResponse:
+      description: A published post.
+      properties:
+        credits_charged:
+          example: 10
+          type: integer
+        id:
+          description: The post id.
+          type: integer
+        license:
+          description: The content license the post was published under.
+          enum:
+          - arr
+          - cc-by
+          - cc0
+          example: arr
+          type: string
+        media_type:
+          enum:
+          - image
+          - video
+          - audio
+          type: string
+        moderation:
+          description: Image/video posts are rated after publish; feed visibility follows the review.
+          example: pending
+          type: string
+        theme:
+          description: Present only when the post was entered in a theme (`theme_id`).
+          properties:
+            id:
+              example: 75
+              type: integer
+            title:
+              example: Neon Noir
+              type: string
+            url:
+              example: https://budgetpixel.com/themes/75
+              format: uri
+              type: string
+          type: object
+        url:
+          description: Public URL of the post.
+          example: https://budgetpixel.com/p/12345
+          format: uri
+          type: string
+      type: object
     Error:
       properties:
         error:
@@ -233,6 +483,43 @@ components:
       required:
       - error
       type: object
+    QueueFull:
+      description: '`429` body when your account already has as many jobs of this kind
+
+        (image, video or audio) in flight as its concurrency cap allows. Submit
+
+        the next job when one of your running jobs finishes.
+
+        '
+      properties:
+        active_jobs:
+          description: Jobs of this kind in flight right now.
+          type: integer
+        code:
+          enum:
+          - queue_full
+          type: string
+        error:
+          description: Human-readable message.
+          type: string
+        queue_full:
+          enum:
+          - true
+          type: boolean
+        queue_limit:
+          description: Your concurrency cap for this kind of job.
+          type: integer
+        retry_after_seconds:
+          description: Same value as the `Retry-After` header.
+          type: integer
+      required:
+      - error
+      - code
+      - queue_full
+      - queue_limit
+      - active_jobs
+      - retry_after_seconds
+      type: object
     ModerationBlocked:
       description: Returned (with HTTP 400) when the input content moderation gate blocks a generation request. The block is a property of the request's prompt or input media — reword the prompt or change the input and retry. Branch on `restriction_reason`, which is stable and machine-readable.
       properties:
@@ -252,28 +539,58 @@ components:
       - error
       - restriction_reason
       type: object
-    CreatePostResponse:
-      description: A published post.
+    Theme:
+      description: A live clan theme you can enter with `POST /v1/posts` `theme_id`.
       properties:
-        credits_charged:
-          example: 10
+        clan:
+          description: The clan hosting the theme.
+          properties:
+            id:
+              type: integer
+            name:
+              example: Neon Collective
+              type: string
+            role:
+              description: Your role in this clan.
+              enum:
+              - owner
+              - moderator
+              - member
+              type: string
+            slug:
+              example: neon-collective
+              type: string
+            url:
+              example: https://budgetpixel.com/clans/neon-collective
+              format: uri
+              type: string
+          type: object
+        description:
+          description: The theme's brief from its host.
+          type: string
+        ends_at:
+          description: Entries close at this time.
+          format: date-time
+          type: string
+        entry_count:
+          description: Posts entered so far.
           type: integer
         id:
-          description: The post id.
+          description: Pass this as `theme_id` on `POST /v1/posts`.
+          example: 75
           type: integer
-        media_type:
-          enum:
-          - image
-          - video
-          - audio
+        participant_count:
+          description: Distinct creators who have entered.
+          type: integer
+        starts_at:
+          format: date-time
           type: string
-        moderation:
-          description: Image/video posts are rated after publish; feed visibility follows the review.
-          example: pending
+        title:
+          example: Neon Noir
           type: string
         url:
-          description: Public URL of the post.
-          example: https://budgetpixel.com/p/12345
+          description: Public page listing the theme's entries.
+          example: https://budgetpixel.com/themes/75
           format: uri
           type: string
       type: object
