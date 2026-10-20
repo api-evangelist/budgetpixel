@@ -385,20 +385,20 @@ related_servers:
     a BudgetPixel-controlled surface.
 docs: https://docs.budgetpixel.com/mcp-server
 tool_quality:
-  tool_count: 18
-  tokens_total: 13375
-  tokens_per_tool_median: 761
+  tool_count: 21
+  tokens_total: 14676
+  tokens_per_tool_median: 683
   heavy_tools:
   - name: generate_video
-    tokens: 1704
+    tokens: 1736
   - name: generate_image
-    tokens: 1536
+    tokens: 1569
   heavy_tool_count: 2
-  params_total: 105
+  params_total: 115
   params_undescribed: 0
   params_described_pct: 100.0
   tools_with_undescribed_params: 0
-  tools_annotated: 18
+  tools_annotated: 21
   annotated_pct: 100.0
   state_changing_unhinted: []
   tools_missing_schema: 0
